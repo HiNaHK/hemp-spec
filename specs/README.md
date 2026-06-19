@@ -1,10 +1,11 @@
 # specs
 
-`specs/` は、HEMP 実装者向け仕様文書の置き場です。
+このディレクトリには、HEMP の仕様文書を置く。
 
-## 仕様領域
+文書は、一覧の順に読む。
 
-- `core/`: HEMP Core と Standard Data Body を扱います。
-- `proto-encoding/`: HEMP の Proto Encoding と `.proto` schema を扱います。
-- `transport-binding/`: HEMP frame を transport 上で運ぶための仕様を扱います。
-- `transport-binding/local-ipc/`: Local Process IPC Binding 実現ガイドを扱います。
+## 文書
+
+- `core/`: HEMP Core protocol specification。
+- `proto-encoding/`: HEMP Protobuf Encoding specification。
+- `transport-binding/`: HEMP Transport Binding specification。
