@@ -1,0 +1,396 @@
+syntax = "proto3";
+
+package hemp.v1;
+
+// HEMP Protobuf schema。
+//
+// この file は HEM Payload bytes の Protobuf schema を定義する。
+// HEM Payload は serialized hemp.v1.HemPayload protobuf message bytes である。
+//
+// HEM Length Header は framing 要素であり、この schema には含まれない。
+
+message HemPayload {
+  // HEMP payload format validation 上、意味上必須である。
+  HemHeader header = 1;
+
+  // HEMP payload format validation 上、known oneof branch が意味上必須である。
+  // 選択される branch は header.channel / header.role / header.abort によって決まる。
+  oneof body {
+    // agreement 用 protocol channel。
+    // channel = -1
+    AgreementPostBody agreement_post = 11;
+    AgreementReplyBody agreement_reply = 12;
+
+    // ping 用 protocol channel。
+    // channel = -2
+    PingPostBody ping_post = 13;
+    PingReplyBody ping_reply = 14;
+
+    // shutdown 用 protocol channel。
+    // channel = -3
+    ShutdownPostBody shutdown_post = 15;
+    ShutdownReplyBody shutdown_reply = 16;
+
+    // cancel 用 protocol channel。
+    // channel = -4
+    CancelPostBody cancel_post = 17;
+    CancelReplyBody cancel_reply = 18;
+
+    // application channel の通常 body。
+    //
+    // 次の場合に使用する。
+    //   header.channel > 0 && header.abort == false
+    //
+    // HEMP Core はこの bytes を opaque として扱う。
+    bytes application_body = 31;
+
+    // application channel の abort body。
+    //
+    // 次の場合に使用する。
+    //   header.channel > 0 && header.abort == true
+    //
+    // HEMP Core はこの bytes を opaque として扱う。
+    bytes abort_body = 32;
+  }
+}
+
+message HemHeader {
+  // 意味上必須である。
+  // DIRECTION_UNSPECIFIED は invalid である。
+  Direction direction = 1;
+
+  // 意味上必須である。
+  // ROLE_UNSPECIFIED は invalid である。
+  Role role = 2;
+
+  // 意味上必須である。
+  // channel == 0 は invalid である。
+  //
+  // channel < 0:
+  //   protocol channel space
+  //
+  // channel > 0:
+  //   application channel space
+  sint32 channel = 3;
+
+  // 意味上必須である。
+  // thread == 0 は invalid である。
+  uint32 thread = 4;
+
+  // 意味上必須である。
+  // seq == 0 は invalid である。
+  // seq は wrap-around しない。
+  uint32 seq = 5;
+
+  // false が意味を持つ値であるため、明示的な presence が必須である。
+  optional bool end = 6;
+
+  // false が意味を持つ値であるため、明示的な presence が必須である。
+  optional bool close = 7;
+
+  // false が意味を持つ値であるため、明示的な presence が必須である。
+  optional bool abort = 8;
+}
+
+enum Direction {
+  DIRECTION_UNSPECIFIED = 0;
+  DIRECTION_TO_ENGINE = 1;
+  DIRECTION_TO_HOST = 2;
+}
+
+enum Role {
+  ROLE_UNSPECIFIED = 0;
+  ROLE_POST = 1;
+  ROLE_REPLY = 2;
+  ROLE_NOTICE = 3;
+}
+
+// agreement 用 protocol channel。
+// channel = -1
+
+message AgreementPostBody {
+  // 必須である。
+  AgreementVersion version = 1;
+
+  // 必須である。
+  AgreementDigest digest = 2;
+
+  // 必須である。
+  SessionLimits limits = 3;
+}
+
+message AgreementReplyBody {
+  // 必須である。
+  AgreementReplyVersion version = 1;
+
+  // 必須である。
+  AgreementReplyDigest digest = 2;
+
+  // 必須である。
+  AgreementReplyLimits limits = 3;
+}
+
+message AgreementVersion {
+  // 必須である。
+  //
+  // HEMP protocol version string である。
+  // Payload encoding selector ではない。
+  optional string protocol = 1;
+
+  // 必須である。
+  AgreementApplicationVersion application = 2;
+}
+
+message AgreementApplicationVersion {
+  // 必須である。
+  ApplicationIdentity host = 1;
+
+  // 必須である。
+  ApplicationIdentity engine = 2;
+}
+
+message ApplicationIdentity {
+  // 必須である。
+  // case-sensitive exact string として比較する。
+  optional string name = 1;
+
+  // 必須である。
+  // case-sensitive exact string として比較する。
+  optional string version = 2;
+}
+
+message AgreementDigest {
+  // 必須である。
+  ChannelDigest protocol = 1;
+
+  // 必須である。
+  ChannelDigest application = 2;
+}
+
+message ChannelDigest {
+  // 必須である。
+  // strict lower_snake_case ASCII string である。
+  optional string name = 1;
+
+  // 必須である。
+  // SHA-256 の raw digest bytes である。
+  // valid length は 32 bytes である。
+  optional bytes digest = 2;
+}
+
+message SessionLimits {
+  // 必須である。
+  // 通常の application channel HEM における
+  // received HEM Payload bytes length の上限である。
+  optional uint32 hem_payload_length = 1;
+
+  // 必須である。
+  OpenThreadsLimits open_threads = 2;
+
+  // 必須である。
+  RoleLimits role = 3;
+
+  // 必須である。
+  ProtocolLimits protocol = 4;
+}
+
+message OpenThreadsLimits {
+  // 必須である。
+  optional uint32 per_channel = 1;
+
+  // 必須である。
+  optional uint32 total = 2;
+}
+
+message RoleLimits {
+  // 必須である。
+  RoleLimit post = 1;
+
+  // 必須である。
+  RoleLimit reply = 2;
+
+  // 必須である。
+  RoleLimit notice = 3;
+}
+
+message RoleLimit {
+  // 必須である。
+  optional uint32 hem_count = 1;
+
+  // 必須である。
+  optional uint32 payload_total_length = 2;
+}
+
+message ProtocolLimits {
+  // 必須である。
+  CancelProtocolLimits cancel = 1;
+}
+
+message CancelProtocolLimits {
+  // 必須である。
+  optional uint32 in_flight_requests = 1;
+}
+
+message AgreementResult {
+  // 必須である。
+  // false は有効値であり、対応する agreement item が受け入れられなかったことを表す。
+  optional bool result = 1;
+
+  // 必須である。
+  // 人間向けの説明である。
+  // 機械判定の主入力として使用しない。
+  optional string message = 2;
+}
+
+message AgreementReplyVersion {
+  // 必須である。
+  AgreementResult protocol = 1;
+
+  // 必須である。
+  AgreementReplyApplicationVersion application = 2;
+}
+
+message AgreementReplyApplicationVersion {
+  // 必須である。
+  AgreementResult host = 1;
+
+  // 必須である。
+  AgreementResult engine = 2;
+}
+
+message AgreementReplyDigest {
+  // 必須である。
+  AgreementResult protocol = 1;
+
+  // 必須である。
+  AgreementResult application = 2;
+}
+
+message AgreementReplyLimits {
+  // 必須である。
+  // false は有効値であり、hem_payload_length が受け入れられなかったことを表す。
+  optional bool hem_payload_length = 1;
+
+  // 必須である。
+  AgreementReplyOpenThreadsLimits open_threads = 2;
+
+  // 必須である。
+  AgreementReplyRoleLimits role = 3;
+
+  // 必須である。
+  AgreementReplyProtocolLimits protocol = 4;
+
+  // 必須である。
+  // limits 全体に対する人間向けの説明である。
+  // 機械判定の主入力として使用しない。
+  optional string message = 5;
+}
+
+message AgreementReplyOpenThreadsLimits {
+  // 必須である。
+  optional bool per_channel = 1;
+
+  // 必須である。
+  optional bool total = 2;
+}
+
+message AgreementReplyRoleLimits {
+  // 必須である。
+  AgreementReplyRoleLimit post = 1;
+
+  // 必須である。
+  AgreementReplyRoleLimit reply = 2;
+
+  // 必須である。
+  AgreementReplyRoleLimit notice = 3;
+}
+
+message AgreementReplyRoleLimit {
+  // 必須である。
+  optional bool hem_count = 1;
+
+  // 必須である。
+  optional bool payload_total_length = 2;
+}
+
+message AgreementReplyProtocolLimits {
+  // 必須である。
+  AgreementReplyCancelProtocolLimits cancel = 1;
+}
+
+message AgreementReplyCancelProtocolLimits {
+  // 必須である。
+  optional bool in_flight_requests = 1;
+}
+
+// ping 用 protocol channel。
+// channel = -2
+
+message PingPostBody {
+  // empty message として定義する。
+  // ただし、HemPayload では ping_post oneof branch が存在しなければならない。
+}
+
+message PingReplyBody {
+  // 必須である。
+  // false は有効値であり、ping request が受け入れられなかったことを表す。
+  optional bool result = 1;
+
+  // 必須である。
+  // 人間向けの説明である。
+  optional string message = 2;
+}
+
+// shutdown 用 protocol channel。
+// channel = -3
+
+message ShutdownPostBody {
+  // 必須である。
+  // empty string は有効である。
+  optional string reason = 1;
+}
+
+message ShutdownReplyBody {
+  // 必須である。
+  // false は有効値であり、この HEMP session がその時点で
+  // normal shutdown を受け入れられなかったことを表す。
+  optional bool result = 1;
+
+  // 必須である。
+  // 人間向けの説明である。
+  optional string message = 2;
+}
+
+// cancel 用 protocol channel。
+// channel = -4
+
+message CancelPostBody {
+  // 必須である。
+  CancelTarget target = 1;
+
+  // 必須である。
+  // empty string は有効である。
+  optional string reason = 2;
+}
+
+message CancelTarget {
+  // 必須である。
+  // application channel reference である。
+  //
+  // Protobuf scalar type は uint32 だが、有効な semantic value は次である。
+  //   1..2147483647
+  optional uint32 channel = 1;
+
+  // 必須である。
+  optional uint32 thread = 2;
+}
+
+message CancelReplyBody {
+  // 必須である。
+  // false は有効値であり、cancel request が受け入れられなかったことを表す。
+  optional bool result = 1;
+
+  // 必須である。
+  // 人間向けの説明である。
+  optional string message = 2;
+}
