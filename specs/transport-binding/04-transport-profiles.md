@@ -19,6 +19,7 @@ HEM frame boundary by Profile
 HEM frame interleave
 Byte Stream Profile
 Message Boundary Profile
+Message Boundary Profile payload max
 Profile selection
 Local Process IPC Binding との関係
 ```
@@ -202,13 +203,15 @@ Byte Stream Profile では、1つの HEM Payload の内部に、別の HEM frame
 
 ## 10. Message Boundary Profile
 
-Message Boundary Profile は、transport が message boundary を提供する場合に、その message boundary を HEM frame delivery boundary として使用する Transport Binding Profile である。
+Message Boundary Profile は、transport が message boundary を提供する場合に、その message boundary を HEM frame sequence の delivery boundary として使用する Transport Binding Profile である。
 
-Message Boundary Profile では、ordering unit は、順序保証された transport message sequence を提供しなければならない。
+Message Boundary Profile では、ordering unit は、順序保証された transport message payload sequence を提供しなければならない。
 
-Message Boundary Profile では、1つの transport message は、1つの complete HEM frame に対応する。
+Message Boundary Profile では、1つの transport message payload は、1つの ordering unit に属する HEM frame sequence である。
 
-Message Boundary Profile では、transport message boundary は HEM frame boundary として扱われる。
+1つの transport message payload には、1つ以上の complete HEM frame を含めてよい。
+
+Message Boundary Profile では、transport message boundary は、transport message payload 内の HEM frame sequence の外側の delivery boundary である。
 
 ただし、transport message boundary は、HEM frame format を置き換えない。
 
@@ -218,61 +221,163 @@ Message Boundary Profile は、HEM Payload encoding を変更しない。
 
 Message Boundary Profile は、HEM frame を transport message payload だけで再定義しない。
 
+Message Boundary Profile は、transport message boundary、transport message close、または transport-level reset に `abort` semantics を持たせない。
+
 ## 11. Message Boundary Profile Frame Boundary
 
-Message Boundary Profile では、1つの transport message が、次の形式の1つの complete HEM frame を含まなければならない。
+Message Boundary Profile では、1つの transport message payload が、次の形式の HEM frame sequence を含む。
 
 ```text
-transport message payload = HEM Length Header + HEM Payload
+transport message payload = 1*complete HEM frame
 ```
 
-1つの transport message に、複数の HEM frame を含めてはならない。
+各 complete HEM frame は、次の形式である。
 
-1つの HEM frame を、複数の transport message に分割してはならない。
+```text
+HEM frame = HEM Length Header + HEM Payload
+```
 
-1つの transport message の内部に、HEMP 外の data、transport control data、log output、diagnostic output、または複数 logical send の non-frame data を混ぜてはならない。
+1つの transport message payload に、複数の HEM frame を含めてよい。
 
-受信側は、1つの transport message を受信した場合、その transport message 全体を1つの candidate HEM frame として扱う。
+1つの HEM frame を、複数の transport message payload に分割してはならない。
 
-受信側は、その candidate HEM frame について、HEM Length Header と HEM Payload bytes の整合性を検証しなければならない。
+1つの transport message payload の内部に、HEMP 外の data、transport control data、log output、diagnostic output、または complete HEM frame ではない data を混ぜてはならない。
 
-transport message の byte length は、HEM Length Header の size と、HEM Length Header が示す HEM Payload length の合計と一致しなければならない。
+受信側は、1つの transport message payload を受信した場合、その payload 全体を HEM frame sequence として解析しなければならない。
 
-一致しない場合、receiver はその transport message を有効な complete HEM frame として扱ってはならない。
+受信側は、transport message payload の先頭から順に、次を繰り返して complete HEM frame を切り出さなければならない。
+
+```text
+1. HEM Length Header を取得する。
+2. HEM Length Header が示す HEM Payload length を読む。
+3. 指定された length 分の HEM Payload bytes を取得する。
+4. 1つの complete HEM frame として切り出す。
+5. transport message payload に残り bytes があれば、次の HEM frame として解析を続ける。
+```
+
+transport message payload の末尾ちょうどで解析が完了しなければならない。
+
+次の場合、receiver はその transport message payload を有効な HEM frame sequence として扱ってはならない。
+
+```text
+transport message payload が空である。
+transport message payload が 4 bytes 未満である。
+HEM Length Header が不正である。
+HEM Length Header が示す Payload bytes が transport message payload 内に足りない。
+transport message payload の末尾に、complete HEM frame として解釈できない余り bytes がある。
+```
+
+transport message payload 全体が HEM frame sequence として正しく切り出せない場合、receiver はその transport message payload 内の HEM frame を処理してはならない。
 
 Message Boundary Profile における HEM Length Header の形式、値、payload length、limits、および failure classification は、HEMP Core および HEMP Payload encoding specification に従う。
 
 ## 12. Message Boundary Profile and HEM Length Header
 
-Message Boundary Profile においても、HEM Length Header は HEM frame の一部である。
+Message Boundary Profile においても、HEM Length Header は各 HEM frame の一部である。
 
-Transport message boundary が HEM frame boundary を提供する場合でも、HEM Length Header は維持される。
+Transport message boundary が HEM frame sequence の delivery boundary を提供する場合でも、各 HEM frame の HEM Length Header は維持される。
 
 HEM Length Header は、Message Boundary Profile においても、直後に続く HEM Payload bytes の長さを表す。
 
-Transport Binding は、transport message size を HEM Length Header の代替として扱ってはならない。
+Transport Binding は、transport message payload size を HEM Length Header の代替として扱ってはならない。
 
 Transport Binding は、HEM Length Header を省略してはならない。
 
 Transport Binding は、transport message metadata、message size、message type、message flag、または transport-specific header を、HEM Length Header の代替として扱ってはならない。
 
-Transport Binding は、HEM Length Header と transport message boundary の不一致を、transport-specific な補正によって正常化してはならない。
+Transport Binding は、HEM Length Header と transport message payload boundary の不一致を、transport-specific な補正によって正常化してはならない。
 
-Message Boundary Profile における transport message boundary は、complete HEM frame の外側の delivery boundary であり、HEM frame format の置換ではない。
+Message Boundary Profile における transport message boundary は、HEM frame sequence の外側の delivery boundary であり、HEM frame format の置換ではない。
 
-## 13. Message Boundary Profile and Interleave
+## 13. Message Boundary Profile Processing
 
-Message Boundary Profile では、HEM frame interleave は transport message 単位でのみ成立する。
+Message Boundary Profile では、transport message payload 全体を、先に HEM frame sequence として切り出せることを確認しなければならない。
 
-Message Boundary Profile では、1つの transport message が1つの complete HEM frame に対応するため、interleave の最小単位は1 transport messageである。
+transport message payload 全体が HEM frame sequence として正しく切り出せない場合、その transport message payload 内の HEM は処理しない。
 
-Message Boundary Profile は、1つの transport message 内で複数の HEM frame を interleave することを許さない。
+transport message payload が HEM frame sequence として正しく切り出せた場合、receiver は、transport message payload 内の HEM frame を出現順で処理する。
 
-Message Boundary Profile は、1つの HEM frame を複数の transport message に分割して interleave することを許さない。
+transport message payload に複数の HEM frame が含まれる場合、受信側は transport message payload 内の出現順を、その transport message payload が属する ordering unit 内の受信順として扱う。
 
-複数の logical send に属する HEM frame が同じ ordering unit 上に現れる場合でも、それらは complete transport message、かつ complete HEM frame 単位で sequence に並ばなければならない。
+受信側は、同一 transport message payload 内で切り出した HEM frame の順序を入れ替えてはならない。
 
-## 14. Profile Selection
+1つの transport message payload に複数 HEM frame が含まれる場合でも、それらは atomic transaction ではない。
+
+HEMP は、transport message payload 内の複数 HEM frame をまとめて成功または失敗させる transaction mechanism を定義しない。
+
+ただし、framing として不正な transport message payload は、message 内の HEM を処理しない。
+
+framing として正しく切り出せた後、message 内の HEM frame は出現順で処理する。
+
+いずれかの HEM frame の処理によって HEMP session が継続不能、失敗状態、または正常終了状態になった場合、受信側は同じ transport message payload 内の後続 HEM frame を処理しない。
+
+## 14. Message Boundary Profile Payload Max
+
+Message Boundary Profile では、transport message payload max という概念を扱う。
+
+transport message payload max は、1つの transport message payload に載せられる最大 byte 数である。
+
+transport message payload max は、HEMP Core では固定しない。
+
+transport message payload max は、concrete Transport Binding または実装が定義する。
+
+送信側は、この上限を超える transport message payload を生成してはならない。
+
+```text
+len(transport message payload) <= transport message payload max
+```
+
+受信側が `transport message payload max` を超える transport message payload を受信した場合、それは HEMP Core の failure classification ではなく、Transport Binding 上の違反として扱う。
+
+1つの HEM frame 自体が `transport message payload max` に収まらない場合、その HEM frame は Message Boundary Profile では送信できない。
+
+```text
+4 + HEM Payload length > transport message payload max
+```
+
+この場合、必要であれば HEMP の logical send を複数 HEM へ chunking する。
+
+ただし、対象 channel で `chunking banned flag = true` の場合、その logical send は 1 HEM で完結しなければならないため、transport message payload max に収まらない内容は送信できない。
+
+application channel 上の通常 HEM communication では、transport message payload max に加えて、agreement の `body.limits.hem_payload_length` および `body.limits.role.*` も満たさなければならない。
+
+protocol channel の HEM frame は、HEMP Core specification の protocol channel Payload length 上限を満たし、かつ concrete Transport Binding または実装が定義する transport message payload max に収まらなければならない。
+
+Message Boundary Profile を使用する concrete Transport Binding または実装は、少なくとも HEMP Core specification の protocol channel Payload length 上限に等しい HEM Payload を持つ protocol channel HEM frame を送受信できる transport message payload max を確保しなければならない。
+
+```text
+transport message payload max
+>=
+4 + HEMP Core specification protocol channel Payload length limit
+```
+
+## 15. Message Boundary Profile and Direction
+
+Message Boundary Profile を使用する各 ordering unit は、Host -> Engine または Engine -> Host のいずれか一方の実通信方向に属する。
+
+1つの transport message payload に複数 HEM frame を含める場合、その transport message payload 内のすべての HEM frame は、その transport message payload が属する ordering unit の実通信方向で受信されたものとして扱う。
+
+transport message payload 内の各 HEM Header の `direction` は、その transport message payload が属する ordering unit の実通信方向と一致しなければならない。
+
+実通信方向と HEM Header の `direction` field が一致しない場合、receiver は HEMP header validation failure として扱わなければならない。
+
+## 16. Message Boundary Profile and Interleave
+
+Message Boundary Profile では、HEM frame interleave は complete HEM frame 単位でのみ成立する。
+
+Message Boundary Profile では、1つの transport message payload に複数の HEM frame を含めてよいため、同じ ordering unit に属する異なる logical send の HEM frame を、同じ transport message payload 内で交互に配置してよい。
+
+ただし、interleave は complete HEM frame 単位に限られる。
+
+Message Boundary Profile は、1つの HEM frame の内部に別の HEM frame を interleave することを許さない。
+
+Message Boundary Profile は、1つの HEM frame を複数の transport message payload に分割して interleave することを許さない。
+
+`abort = true` の HEM を transport message payload 内に含める場合でも、その HEM は該当 logical send の終端 HEM であり、同じ logical send の継続 HEM を後続に配置してはならない。
+
+複数の logical send に属する HEM frame が同じ ordering unit 上に現れる場合でも、それらは complete HEM frame 単位で sequence に並ばなければならない。
+
+## 17. Profile Selection
 
 Concrete Transport Binding は、使用する Transport Binding Profile を明示しなければならない。
 
@@ -288,7 +393,7 @@ Agreement body は、Transport Binding Profile negotiation に使用しない。
 
 Transport Binding Profile を切り替える必要がある場合、その扱いは、別の concrete Transport Binding、別の session profile、または別仕様で明示的に定義しなければならない。
 
-## 15. Relationship to Local Process IPC Binding
+## 18. Relationship to Local Process IPC Binding
 
 Local Process IPC Binding は、Byte Stream Profile を使用する concrete Transport Binding である。
 
@@ -298,7 +403,7 @@ Local Process IPC Binding 固有の `host_to_engine stream`、`engine_to_host st
 
 この文書は、Local Process IPC Binding の concrete definition を再定義しない。
 
-## 16. Non-Goals
+## 19. Non-Goals
 
 この文書は、次を定義しない。
 
@@ -320,7 +425,7 @@ Local Process IPC Binding の concrete rules
 network transport binding
 ```
 
-## 17. Relationship to Other Documents
+## 20. Relationship to Other Documents
 
 この文書は、Transport Binding Profile、HEM frame interleave、Byte Stream Profile、および Message Boundary Profile を定義する。
 
