@@ -1,357 +1,310 @@
-# HEMP 実装ロードマップ: Core v9 / Standard Data Body v1 / Transport Binding v4.1
+# HEMP Implementation Roadmap
 
-Status: Roadmap Draft  
-Date: 2026-06-18  
+Status: Roadmap  
+Last updated: 2026-06-20  
 Language: Japanese  
-Scope: HEMP independent implementation roadmap
+Scope: HEMP implementation roadmap
 
 ---
 
 ## 1. この文書の目的
 
-この文書は、HEMP の実装ロードマップを整理するためのものである。
+この文書は、HEMP の実装作業を進めるための大枠を整理するための roadmap です。
 
-対象は、仕様レビューやメタデータ固定ではなく、HEMP を独立したプロトコルライブラリプロジェクトとして実装していくための大枠である。
+この roadmap は、HEMP 仕様本文とは別に、実装作業の到達目標、各 milestone の位置づけ、今後の進め方を整理します。
 
-この文書では、実装設計の細部、GitHub / Codex の具体運用、API設計、Issue分割、PRルールなどは決めない。これらは実際にその作業を行う段階で壁打ちし、必要に応じて決定する。
+実装 API、Issue / PR 運用、CI 構成、release automation、各言語ごとの package 構成などの細部は、該当する実作業に入る段階で必要に応じて扱います。
 
 ---
 
 ## 2. 前提
 
-### 2.1 HEMPは独立プロジェクトである
+### 2.1 実装対象
 
-HEMP は MST プロジェクトから独立したプロジェクトとして扱う。
+HEMP の実装対象は、この repository の `specs/` 配下に置かれた HEMP 仕様本文です。
 
-MST は HEMP 作成のきっかけや将来的な利用先になり得るが、この実装ロードマップの対象には含めない。
+実装時の正本は `specs/` 配下の文書です。
 
-### 2.2 実装対象
+`validation/` 配下の資料は、実装確認のための補助資料です。仕様本文ではありません。
 
-HEMP の実装対象は、次を一体として扱う。
+仕様本文と補助資料が矛盾する場合は、仕様本文を優先します。
 
-```text
-- HEMP Core v9
-- HEMP Core v9 Protobuf Encoding
-- HEMP Core v9 .proto schema
-- Standard Data Body v1
-- Transport Binding v4.1
-```
+### 2.2 仕様本文の扱い
 
-Core v9、Standard Data Body v1、Transport Binding v4.1 は、文書が分かれているだけであり、HEMP実装上は別物・任意追加として扱わない。
+`specs/` 配下の文書は、HEMP protocol を構成する一体の仕様本文として扱います。
 
-Transport Binding v4.1 は、HEMP frame を実際に運ぶための構成要素として扱う。
+実装は、この repository 上の HEMP 仕様本文に基づいて行います。
 
-### 2.3 正本と補助成果物
+### 2.3 最初の正式実装
 
-実装時の正本は、有効仕様セットである。
+最初の正式実装は Python 版とします。
 
-```text
-HEMP_effective_spec_set_core_v9_2026-06-18.zip
-```
+Python 版は試作品ではなく、HEMP の最初の正式なライブラリ実装として扱います。
 
-validation artifacts と work records は非規範であり、仕様本文と矛盾する場合は有効仕様セットを優先する。
+Rust 版は、Python 版の後に進める後続の正式実装とします。
+
+Python 版と Rust 版の関係は、次のように整理します。
 
 ```text
-HEMP_core_v9_validation_artifacts_2026-06-18.zip
-HEMP_core_v9_work_records_2026-06-18.zip
-```
+Python 版:
+  HEMP の最初の正式実装
 
----
-
-## 3. 基本方針
-
-### 3.1 完全版を目標にする
-
-HEMP実装は、部分的な検証用実装や試作品ではなく、完全版の正式ライブラリ実装を目標にする。
-
-ただし、個人プロジェクトとして進めるため、実装開始前に必須ではない形式作業は可能な範囲で省略する。
-
-省略してよいものの例:
-
-```text
-- Review Candidate 表記固定
-- release note 作成
-- tag 名整理
-- 追加 work records 更新
-- 追加通読レビュー
-- 過度に詳細な運用ルールの先行決定
-```
-
-### 3.2 仕様駆動開発で進める
-
-HEMP実装は、仕様駆動開発を基本方針とする。
-
-つまり、実装は有効仕様セットから導かれるものであり、実装都合で HEMP の意味論を変更しない。
-
-ただし、次のような具体運用は、現時点では決めない。
-
-```text
-- Issueテンプレート
-- AGENTS.md の具体内容
-- Requirement ID の命名規則
-- PRレビュー手順
-- CI構成
-- Codexへの具体的な依頼文
-```
-
-これらは、GitHub repository 作成や実装開始の段階で必要に応じて決定する。
-
-### 3.3 Python版を最初の正式実装にする
-
-最初の実装言語は Python とする。
-
-Python版は、HEMP完全実装の最初の正式実装として扱う。
-
-### 3.4 Rust版は後続の正式実装にする
-
-Rust版は、Python版の後に進める正式実装として扱う。
-
-Python版とRust版の関係は、次のように整理する。
-
-```text
-Python版:
-  HEMP完全実装の最初の正式実装
-
-Rust版:
-  後続の正式実装
+Rust 版:
+  HEMP の後続の正式実装
 
 両者の関係:
-  Python版が本実装でRust版が移植版、という関係ではない
-  Python版がreferenceでRust版がproduction、という関係でもない
-  どちらもHEMPの正式なライブラリ実装である
+  Python 版が本実装で Rust 版が移植版、という関係ではない
+  Python 版が reference で Rust 版が production、という関係でもない
+  どちらも HEMP の正式なライブラリ実装である
 ```
 
-Python版で得た知見はRust版に活用してよい。  
-ただし、Rust版の正しさの基準は Python版ではなく、有効仕様セットである。
+Rust 版で Python 版の知見を活用してもよいです。  
+ただし、Rust 版の正しさの基準は Python 版ではなく、HEMP 仕様本文です。
 
-### 3.5 Milestoneは厳密な直列工程ではない
+### 2.4 Milestone の扱い
 
-このロードマップの Milestone は、厳密な時系列工程ではなく、到達目標である。
+この roadmap の milestone は、実装作業の到達目標として扱います。
 
-実際の作業では、検証、公開準備、Rust版準備、ドキュメント整理などを必要に応じて並行して進める。
-
-どの作業をどのタイミングで並行するかは、実際の進め方に合わせて判断する。
-
-この文書では、Track のような細かい並行作業区分は定義しない。
+実際の作業では、必要に応じて検証、公開準備、Rust 版準備、ドキュメント整理などを並行して進めます。
 
 ---
 
-## 4. Milestone一覧
+## 3. 現在の状態
+
+Milestone 0 は完了済みです。
+
+Milestone 0 では、Python 版 HEMP 正式実装を開始するための準備として、次を整備しました。
 
 ```text
-Milestone 0: 実装開始準備
-Milestone 1: Python版 HEMP 正式実装
-Milestone 2: Python版 検証・安定化・公開
-Milestone 3: Rust版 HEMP 正式実装
-Milestone 4: Python版 / Rust版 整合確認
-Milestone 5: HEMPプロジェクト全体の継続運用・整理
+- HEMP specification repository を整備した
+- HEMP 仕様本文を repository に反映した
+- HEMP Protobuf schema を repository に反映した
+- validation 資料の位置づけを整理した
+- root README を整備した
+- Apache License 2.0 を追加した
+```
+
+現在の主な次作業は、Milestone 1 の Python 版 HEMP 正式実装です。
+
+---
+
+## 4. Milestone 一覧
+
+```text
+Milestone 0: 実装開始準備（完了）
+Milestone 1: Python 版 HEMP 正式実装
+Milestone 2: Python 版 検証・安定化・公開
+Milestone 3: Rust 版 HEMP 正式実装
+Milestone 4: Python 版 / Rust 版 整合確認
+Milestone 5: HEMP プロジェクト全体の継続運用・整理
 Milestone 6: 追加言語対応
 ```
 
 ---
 
-## 5. Milestone詳細
+## 5. Milestone 詳細
 
 ### 5.1 Milestone 0: 実装開始準備
 
+Status: Completed
+
 目的:
 
 ```text
-Python版 HEMP 正式実装を開始できる状態を作る。
+Python 版 HEMP 正式実装を開始できる状態を作る。
 ```
 
-含めるもの:
+完了済みの内容:
 
 ```text
-- GitHub repository を用意する
-- 有効仕様セットを参照できる状態にする
-- Codex を使える前提を整える
-- Python実装を開始できる最低限の開発環境を用意する
-- 仕様駆動開発で進めるための最低限の整理をする
-```
-
-含めすぎないもの:
-
-```text
-- GitHub運用細部
-- Codex指示文
-- Issue / PR ルール
-- API設計
-- CI詳細
-- 実装内部設計
+- specification repository を整備した
+- 仕様本文を repository 上で参照できる状態にした
+- Protobuf schema を repository 上で参照できる状態にした
+- validation 資料を補助資料として整理した
+- root README を整備した
+- repository license を Apache License 2.0 として明示した
 ```
 
 完了条件:
 
 ```text
-Milestone 1 の Python版 HEMP 正式実装に着手できる状態になっている。
+Milestone 1 の Python 版 HEMP 正式実装に着手できる状態になっている。
+```
+
+判定:
+
+```text
+完了済み。
 ```
 
 ---
 
-### 5.2 Milestone 1: Python版 HEMP 正式実装
+### 5.2 Milestone 1: Python 版 HEMP 正式実装
 
 目的:
 
 ```text
-Python版を、HEMP完全実装の最初の正式実装として作る。
+Python 版を、HEMP の最初の正式なライブラリ実装として作る。
 ```
 
 対象:
 
 ```text
-- Core v9
-- Protobuf Encoding
-- .proto schema
-- Standard Data Body v1
-- Transport Binding v4.1
+- repository 上の HEMP 仕様本文に基づく正式実装
+- Protobuf schema に基づく HEM Payload encoding / decoding
+- HEM の生成、送信、受信、検証
+- session と flow の管理
+- Transport Binding に基づく送受信
+- Local Process IPC Binding に基づく送受信
+- failure handling
 ```
 
 位置づけ:
 
 ```text
-Python版は試作品ではない。
-Python版は HEMP完全実装の最初の正式実装である。
+Python 版は試作品ではない。
+Python 版は HEMP の最初の正式実装である。
 ```
 
 完了条件:
 
 ```text
-Python版で、HEMPとして一通り成立する正式実装がある。
+Python 版で、HEMP として一通り成立する正式実装がある。
 ```
 
 備考:
 
 ```text
-仕様照合・安定化・公開は Milestone 2 で扱う。
+仕様照合、安定化、公開準備は Milestone 2 で扱う。
 ```
 
 ---
 
-### 5.3 Milestone 2: Python版 検証・安定化・公開
+### 5.3 Milestone 2: Python 版 検証・安定化・公開
 
 目的:
 
 ```text
-Milestone 1で作成した Python版 HEMP 正式実装を検証し、安定化し、Python版ライブラリとして公開可能な状態にする。
+Milestone 1 で作成した Python 版 HEMP 正式実装を検証し、安定化し、Python 版ライブラリとして公開可能な状態にする。
 ```
 
 含めるもの:
 
 ```text
-- Python版と有効仕様セットの照合
-- conformance vectors / validation artifacts との照合
-- 実装漏れ・曖昧点・仕様解釈ズレの確認
-- Python版ライブラリとしての安定化
+- Python 版と HEMP 仕様本文の照合
+- validation 資料との照合
+- 実装漏れ、曖昧点、仕様解釈ズレの確認
+- Python 版ライブラリとしての安定化
 - README / 利用方法の最低限の整理
-- Python版の公開準備
-- Python版の初回公開
+- Python 版の公開準備
+- Python 版の初回公開
 ```
 
 完了条件:
 
 ```text
-Python版 HEMP ライブラリが、公開可能または公開済みの状態になっている。
+Python 版 HEMP ライブラリが、公開可能または公開済みの状態になっている。
 ```
 
 備考:
 
 ```text
-Rust版の完成は Python版公開の前提にしない。
+Rust 版の完成は Python 版公開の前提にしない。
 ```
 
 ---
 
-### 5.4 Milestone 3: Rust版 HEMP 正式実装
+### 5.4 Milestone 3: Rust 版 HEMP 正式実装
 
 目的:
 
 ```text
-Rust版を、HEMPの後続の正式ライブラリ実装として作る。
+Rust 版を、HEMP の後続の正式なライブラリ実装として作る。
 ```
 
 対象:
 
 ```text
-- Core v9
-- Protobuf Encoding
-- .proto schema
-- Standard Data Body v1
-- Transport Binding v4.1
+- repository 上の HEMP 仕様本文に基づく正式実装
+- Protobuf schema に基づく HEM Payload encoding / decoding
+- HEM の生成、送信、受信、検証
+- session と flow の管理
+- Transport Binding に基づく送受信
+- Local Process IPC Binding に基づく送受信
+- failure handling
 ```
 
 位置づけ:
 
 ```text
-Rust版はPython版の移植版ではない。
-Rust版もHEMPの正式実装である。
+Rust 版は Python 版の移植版ではない。
+Rust 版も HEMP の正式実装である。
 ```
 
 完了条件:
 
 ```text
-Rust版で、HEMPとして一通り成立する正式実装がある。
+Rust 版で、HEMP として一通り成立する正式実装がある。
 ```
 
 備考:
 
 ```text
-Python版で得た知見は活用する。
-ただし、Rust版の正しさの基準は有効仕様セットとする。
-Python版 / Rust版の整合確認は Milestone 4 で扱う。
+Python 版で得た知見は活用してよい。
+ただし、Rust 版の正しさの基準は HEMP 仕様本文とする。
+Python 版 / Rust 版の整合確認は Milestone 4 で扱う。
 ```
 
 ---
 
-### 5.5 Milestone 4: Python版 / Rust版 整合確認
+### 5.5 Milestone 4: Python 版 / Rust 版 整合確認
 
 目的:
 
 ```text
-Python版とRust版が、同じHEMP仕様に適合していることを確認する。
+Python 版と Rust 版が、同じ HEMP 仕様本文に適合していることを確認する。
 ```
 
 含めるもの:
 
 ```text
-- Python版とRust版の仕様適合性確認
-- conformance結果の比較
+- Python 版と Rust 版の仕様適合性確認
+- validation 結果の比較
 - 同じ入力に対する仕様上の判断の一致確認
 - 言語差による挙動差の整理
-- 仕様・テスト・実装の不整合があれば分類する
+- 仕様、テスト、実装の不整合があれば分類する
 ```
 
 完了条件:
 
 ```text
-Python版とRust版の双方について、仕様適合性が確認され、conformance上の矛盾がない状態になっている。
+Python 版と Rust 版の双方について、仕様適合性が確認され、validation 上の矛盾がない状態になっている。
 ```
 
 備考:
 
 ```text
-Python版はRust版の正しさの基準ではない。
-基準は常に有効仕様セットとする。
+Python 版は Rust 版の正しさの基準ではない。
+基準は常に HEMP 仕様本文とする。
 ```
 
 ---
 
-### 5.6 Milestone 5: HEMPプロジェクト全体の継続運用・整理
+### 5.6 Milestone 5: HEMP プロジェクト全体の継続運用・整理
 
 目的:
 
 ```text
-HEMPを、Python版・Rust版を含む独立プロジェクトとして、継続的に保守・公開・拡張できる状態に整える。
+HEMP を、複数の仕様文書と複数の実装を持つ protocol project として、継続的に保守・公開・拡張できる状態に整える。
 ```
 
 含めるもの:
 
 ```text
-- HEMP独立プロジェクトとしての README / docs 整理
-- 仕様と各実装の関係整理
-- Python版 / Rust版のリリース方針整理
+- HEMP 仕様本文と各実装の関係整理
+- Python 版 / Rust 版の release 方針整理
 - version / tag / release 運用の整理
-- conformance assets の扱い整理
+- validation 資料の扱い整理
 - 仕様更新時に各実装がどう追従するかの整理
 - 追加言語対応へ進むための前提整理
 ```
@@ -365,14 +318,14 @@ HEMPを、Python版・Rust版を含む独立プロジェクトとして、継続
 完了条件:
 
 ```text
-HEMPプロジェクト全体として、継続運用と将来拡張の前提が整っている。
+HEMP プロジェクト全体として、継続運用と将来拡張の前提が整っている。
 ```
 
 備考:
 
 ```text
-Milestone 5 は、Python版の初回公開を待たせるものではない。
-Python版は Milestone 2 完了時点で公開可能である。
+Milestone 5 は、Python 版の初回公開を待たせるものではない。
+Python 版は Milestone 2 完了時点で公開可能である。
 ```
 
 ---
@@ -382,7 +335,7 @@ Python版は Milestone 2 完了時点で公開可能である。
 目的:
 
 ```text
-Python版・Rust版の整備後、必要に応じてHEMPの対応言語を広げる。
+Python 版・Rust 版の整備後、必要に応じて HEMP の対応言語を広げる。
 ```
 
 含めるもの:
@@ -392,8 +345,8 @@ Python版・Rust版の整備後、必要に応じてHEMPの対応言語を広げ
 - 対応候補言語の選定
 - 追加言語実装の優先順位決定
 - 公式対応 / experimental 対応などの扱い整理
-- conformance assets を使った追加言語実装の確認方針
-- 複数言語実装を持つプロジェクトとしての運用拡張
+- validation 資料を使った追加言語実装の確認方針
+- 複数言語実装を持つ project としての運用拡張
 ```
 
 含めすぎないもの:
@@ -401,8 +354,8 @@ Python版・Rust版の整備後、必要に応じてHEMPの対応言語を広げ
 ```text
 - 現時点で対応言語を確定すること
 - 全言語対応を前提にすること
-- Python版やRust版の完成前に追加言語実装へ広げすぎること
-- 各言語の具体API設計を今決めること
+- Python 版や Rust 版の完成前に追加言語実装へ広げすぎること
+- 各言語の具体 API 設計を今決めること
 ```
 
 完了条件:
@@ -413,74 +366,32 @@ Python版・Rust版の整備後、必要に応じてHEMPの対応言語を広げ
 
 ---
 
-## 6. 後で壁打ちする項目
+## 6. 実装上の整理
 
-次の項目は重要だが、このロードマップ文書では決定しない。
+### 6.1 HEMP 仕様本文の扱い
 
-これらは、該当する実作業に入る段階で壁打ちし、必要に応じて決定する。
+HEMP 実装では、`specs/` 配下の仕様本文を一体の仕様セットとして扱います。
 
-```text
-- Python版の公開API設計
-- failure / error object の具体設計
-- session / flow validation の責務境界
-- Transport Binding の具体的な実装方式
-- Standard Data Body v1 の送受信API
-- generated protobuf code の管理方針
-- conformance test の具体的な接続方法
-- GitHub Issue / PR 運用
-- AGENTS.md の具体内容
-- Codexへの具体的な依頼文
-- CI / release automation
-- Rust crate構成
-- 追加言語の優先順位
-```
+Core、encoding、standard body、transport、local IPC は、それぞれ HEMP を構成する仕様本文として扱います。
+
+### 6.2 Python 版と Rust 版の関係
+
+Python 版と Rust 版はいずれも正式実装として扱います。
+
+Python 版は Rust 版の移植元や reference 実装ではありません。Rust 版の正しさは、Python 版との一致ではなく、HEMP 仕様本文への適合で判断します。
 
 ---
 
-## 7. このロードマップで採用しない整理
+## 7. まとめ
 
-### 7.1 HEMP構成要素を別物として扱う整理は採用しない
+Milestone 0 は完了済みです。
 
-次のような整理は採用しない。
+HEMP の実装対象は、この repository の `specs/` 配下に置かれた HEMP 仕様本文です。
 
-```text
-- Core v9 だけをHEMP本体として扱う
-- Standard Data Body v1 をHEMPとは別物として扱う
-- Transport Binding v4.1 を任意の後付けとして扱う
-```
+最初の正式実装は Python 版とし、Rust 版は後続の正式実装として進めます。
 
-HEMP実装では、Core v9、Protobuf Encoding、.proto schema、Standard Data Body v1、Transport Binding v4.1 を一体として扱う。
+Python 版と Rust 版はいずれも正式実装であり、上下関係や本実装 / 移植版の関係にはしません。
 
-### 7.2 Python版とRust版に上下関係を置かない
+具体的な運用ルールは、実作業段階で必要に応じて決定します。
 
-次のような整理は採用しない。
-
-```text
-- Python版が本実装でRust版が移植版
-- Python版がreferenceでRust版がproduction
-- Rust版の正しさをPython版との一致で判断する
-```
-
-Python版とRust版はいずれも正式実装であり、正しさの基準は有効仕様セットである。
-
-### 7.3 Track構成は採用しない
-
-このロードマップでは、Milestoneとは別に Track を定義しない。
-
-作業の並行方法は、実際の進め方に合わせて都度判断する。
-
----
-
-## 8. まとめ
-
-HEMPは独立プロジェクトとして実装する。
-
-対象は Core v9、Protobuf Encoding、.proto schema、Standard Data Body v1、Transport Binding v4.1 を一体とした HEMP完全実装である。
-
-最初の正式実装は Python版とし、Rust版は後続の正式実装として進める。
-
-Python版とRust版はいずれも正式実装であり、上下関係や本実装 / 移植版の関係にはしない。
-
-開発は仕様駆動を基本方針とし、Codex / GitHub を利用する。ただし、具体的な運用ルールは実作業段階で決定する。
-
-Milestoneは到達目標であり、厳密な直列工程ではない。並行作業の進め方は、その時点の状況に合わせて判断する。
+Milestone は、実装作業の到達目標として扱います。
