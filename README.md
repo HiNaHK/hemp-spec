@@ -59,3 +59,7 @@ HEMP は、何を送るのか、どの順番で扱うのか、どこまで送っ
 
 - **HEM の意味と運び方を分ける**  
   HEMP の意味は Core で定義し、実際に transport へどう載せるかは Transport Binding で定義します。
+
+## License
+
+この repository は [Apache License 2.0](LICENSE) の下で公開されます。
