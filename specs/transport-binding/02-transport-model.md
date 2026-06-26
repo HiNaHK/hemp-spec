@@ -260,4 +260,4 @@ Concrete Transport Binding は、使用する transport-specific resource が、
 
 HEM frame interleave、Byte Stream Profile、および Message Boundary Profile は、`04-transport-profiles.md` で定義する。
 
-Local Process IPC Binding の concrete definition は、`local-ipc/specification.md` で定義する。
+Local Process IPC Binding を扱う場合は、future binding 文書、draft 文書、または実現ガイドとして、v1.0.0 確定本文とは分離して扱う。
