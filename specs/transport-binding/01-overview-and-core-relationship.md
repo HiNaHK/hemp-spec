@@ -159,14 +159,13 @@ transport failure 後に同じ HEMP session を再開してはならない。
 
 ## 7. Transport Binding Documents
 
-Transport Binding specification は、次の文書で構成する。
+v1.0.0 の Transport Binding specification は、次の文書で構成する。
 
 ```text
 01-overview-and-core-relationship.md
 02-transport-model.md
 03-transport-requirements-and-frame-handling.md
 04-transport-profiles.md
-local-ipc/specification.md
 ```
 
 `01-overview-and-core-relationship.md` は、Transport Binding の目的と HEMP Core との関係を定義する。
@@ -177,4 +176,6 @@ local-ipc/specification.md
 
 `04-transport-profiles.md` は、HEM frame interleave、Byte Stream Profile、および Message Boundary Profile を定義する。
 
-`local-ipc/specification.md` は、Local Process IPC Binding を定義する。
+Local Process IPC Binding は、現時点では v1.0.0 の確定済み Transport Binding specification 本文としては定義しない。
+
+Local Process IPC Binding を扱う場合は、別の future binding 文書、draft 文書、または実現ガイドとして、v1.0.0 確定本文とは分離して扱う。
