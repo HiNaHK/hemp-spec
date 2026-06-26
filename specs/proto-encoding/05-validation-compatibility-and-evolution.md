@@ -105,24 +105,29 @@ length / limit / resource limit 判定対象:
 新規生成 sender は、少なくとも次を満たさなければならない。
 
 ```text
-HemPayload.header を意味上持つ。
-known body oneof branch を意味上1つ持つ。
-Header field 8つを意味上すべて持つ。
-end / close / abort は presence を持つ。
-Header と body branch が整合する。
-unknown fields を出力しない。
-duplicate Core fields に依存しない。
-multiple oneof branch に依存しない。
-embedded message merge semantics に依存した意味を作らない。
+- HemPayload.header を意味上持つ。
+- known body oneof branch を意味上1つ持つ。
+- Header field 8つを意味上すべて持つ。
+- end / close / abort は presence を持つ。
+- Header と body branch が整合する。
+- unknown fields を出力しない。
+- duplicate known fields を出力しない。
+- HemPayload.header を複数回出力しない。
+- HemPayload.body の known oneof branch を複数個出力しない。
+- HemHeader の各 known field を複数回出力しない。
+- Core-defined protocol body message 内の known singular field を複数回出力しない。
+- embedded message merge semantics に依存した意味を作らない。
 ```
 
 新規生成 sender は、Core Envelope に unknown fields を emit してはならない。
+
+新規生成 sender は、Core Envelope に duplicate known fields を emit してはならない。
 
 正規化は、deterministic serialization を要求しない。
 
 正規化は、canonical protobuf byte sequence を要求しない。
 
-HEMP Protobuf Encoding が要求するのは、byte-level canonicalization ではなく、HEMP semantics 上の Core Envelope が正しく表現されていることである。
+HEMP Protobuf Encoding が要求するのは、byte-level canonicalization ではなく、HEMP semantics 上の Core Envelope が正しく、かつ capacity model の前提を満たす形で表現されていることである。
 
 Receiver は、standard Protobuf decode semantics に従い、decode 後の semantic `HemPayload` を validate する。
 
