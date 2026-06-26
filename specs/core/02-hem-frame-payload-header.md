@@ -186,13 +186,18 @@ HEM Payload は、HEMP Core semantics 上の Payload である。
 
 ```text
 HEM Payload semantic structure:
-  header: Core Header field set
-  body:   channel / role / abort に対応する Body
+  header:
+    Core Header field set
+
+  body:
+    channel / direction / role / abort と、
+    HEM Payload encoding が選択する body branch によって
+    HEMP Core semantics 上の意味が決まる Body
 ```
 
 HEM Payload を、HEM Header bytes と HEM Body bytes の単純な連結として定義してはならない。
 
-HEM Payload の具体的な byte representation は、HEM Payload encoding が定義する。
+HEM Payload の具体的な byte representation、message structure、field number、wire type、oneof branch、optional presence、および schema literal は、HEM Payload encoding が定義する。
 
 ---
 
