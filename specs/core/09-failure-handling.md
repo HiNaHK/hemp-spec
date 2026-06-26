@@ -271,6 +271,8 @@ HEM Payload の unknown field は、HEMP payload format failure ではない。
 
 application channel body の unknown field の扱いは、対応する Body Contract が定義する。
 
+HEMP 実装は、相手が解釈する必要のある情報を unknown field として送ってはならない。
+
 ---
 
 ## 13. abort = true と failure
