@@ -246,6 +246,8 @@ ping reply Core Header semantic field set:
 
 known body branch が存在しない場合は、HEM Body Contract failure ではなく、HEMP payload format failure である。
 
+受信側は、`ping` post body に未知fieldが含まれる場合、それらを意味として無視する。
+
 ### 9.5 reply body
 
 `PingReplyBody.result` は presence required である。
@@ -266,6 +268,8 @@ known body branch が存在しない場合は、HEM Body Contract failure では
 
 `PingReplyBody.message` は non-empty でなければならない。
 
+`ping` では nonce を定義しない。
+
 ---
 
 ## 10. shutdown protocol channel
@@ -276,9 +280,39 @@ known body branch が存在しない場合は、HEM Body Contract failure では
 channel = -3
 ```
 
-`shutdown` は、Agreement 成立後に Host が Engine へ HEMP session の正常終了を要求するための protocol channel である。
+`shutdown` は、Agreement 成立後に、HEMP session を終了できる状態か確認し、終了可能であれば正常終了を確定する protocol channel である。
 
-### 10.2 許可される direction / role
+`shutdown` は、HEMP session の終了準備を開始するための HEM ではない。
+
+`shutdown` は、未完了の処理、open HEM Thread、進行中 HEM Timeline、または終了前に必要な通常 HEM 通信を完了させる機能を持たない。
+
+### 10.2 Host-side shutdown-ready state
+
+Host は、shutdown post を送信する前に、Host 側 application の責任で、この HEMP session 上で新しい通常 HEM 通信を開始しない状態にしなければならない。
+
+Host-side shutdown-ready state は、Host が shutdown post を送信してよいと判断するための、Host 側から見た HEMP session 状態である。
+
+Host は、Host が観測している HEMP session 上に未完了の HEM Timeline が残っている状態で、shutdown post を送信してはならない。
+
+未完了の HEM Timeline とは、論理 post 送信が開始され、対応する論理 reply 送信が完了していない HEM Timeline である。
+
+reply が `abort = true` で終端して HEM Timeline が完了した場合、その HEM Timeline は未完了の HEM Timeline には含めない。
+
+post が `abort = true` で終端したが、対応 reply がまだ完了していない HEM Timeline は、未完了の HEM Timeline に含める。
+
+未完了の HEM Timeline には、Host が開始した HEM Timeline と Engine が開始した HEM Timeline の両方を含む。
+
+Host が開始した未完了の `ping` request または `cancel` request は、未完了の HEM Timeline に含まれる。
+
+Host は、Host 側に送信すべき未完了の論理 post 送信、論理 reply 送信、論理 notice 送信、またはそれらの継続 HEM が残っている状態で、shutdown post を送信してはならない。
+
+Host は、Host 側 application が返すべき reply、送るべき notice、または終了前に必要な通常 HEM 通信を残している状態で、shutdown post を送信してはならない。
+
+Host-side shutdown-ready state は、Host が shutdown post を送信してよい状態を表す。
+
+Host-side shutdown-ready state は、Engine 側 application が shutdown を受け入れることを保証しない。
+
+### 10.3 許可される direction / role
 
 `shutdown` で許可される direction / role の組み合わせは次の通りである。
 
@@ -297,7 +331,7 @@ notice
 
 不正な direction / role の組み合わせを `shutdown` で受信した場合、HEMP flow violation とする。
 
-### 10.3 header
+### 10.4 header
 
 `shutdown` は、1 HEM post + 1 HEM reply で完結する。
 
@@ -335,27 +369,66 @@ shutdown reply Core Header semantic field set:
   abort     = false
 ```
 
-### 10.4 post body
+### 10.5 post body
 
-`ShutdownPostBody.reason` は presence required である。
+`shutdown` post body は、HEMP が定義する必須 field として `reason` を持つ。
 
-`reason` は string である。
+```text
+shutdown post body semantic fields:
+  reason = ""
+```
 
-`reason` の空文字列は有効である。
+`reason` は required semantic field である。
 
-### 10.5 reply body
+`reason` の具体的な値、意味、分類、命名規則は HEMP Core では定義しない。
 
-`ShutdownReplyBody.result` は presence required である。
+`reason` の内容は、HEMP を利用する application 側が決める。
 
-`ShutdownReplyBody.message` は presence required である。
+`reason` の空文字列は有効とする。
 
-`message` は non-empty でなければならない。
+### 10.6 reply body
 
-`result = true` は、Engine が shutdown request を受け入れ、HEMP session を正常終了状態へ移行できることを表す。
+`shutdown` reply body は、HEMP が定義する必須 field として `result` と `message` を持つ。
 
-`result = false` は、Engine が shutdown request を受け入れなかったことを表す。
+```text
+shutdown reply body semantic fields:
+  result = true
+  message = "Shutdown is accepted."
+```
 
-`result = false` の場合、HEMP session は正常終了状態へ移行しない。
+Engine は、Body Contract に合う shutdown post を受信した場合、Engine 側 application に、この HEMP session を終了可能か確認する。
+
+Engine は、Engine 側に未完了の論理 post 送信、論理 reply 送信、論理 notice 送信、またはそれらの継続 HEM が残っている状態で、`result = true` の shutdown reply を送信してはならない。
+
+`abort = true` で終端済みの論理送信は、未完了の論理送信ではない。
+
+ただし、post が `abort = true` で終端した後に対応 reply が完了していない HEM Timeline は、未完了の HEM Timeline として扱う。
+
+この条件は、Engine 側 application の終了可否判断ではなく、HEMP protocol state に対する安全不変条件である。
+
+Engine 側 application がこの HEMP session を終了可能と判断し、かつ Engine 側に未完了の論理 post 送信、論理 reply 送信、論理 notice 送信、またはそれらの継続 HEM が残っていない場合、Engine は shutdown reply body の `result` を `true` とする。
+
+`result = true` は、Engine 側 application がこの HEMP session を終了可能と判断し、かつ Engine 側 HEMP 実装が HEMP protocol state として正常終了可能と判断したことを表す。
+
+Host が `shutdown` reply body の `result = true` を受信した時点で、その HEMP session は正常終了したものとして扱う。
+
+正常終了した HEMP session では、以後、新しい HEM を送信してはならない。
+
+正常終了後に再度 HEMP 通信を行う場合は、新しい HEMP session として開始し、再び `agreement` から実行しなければならない。
+
+Engine 側 application がこの HEMP session を終了可能ではない、または終了を拒否すると判断した場合、Engine は shutdown reply body の `result` を `false` とする。
+
+Engine 側 application がこの HEMP session を終了可能と判断した場合でも、Engine 側に未完了の論理 post 送信、論理 reply 送信、論理 notice 送信、またはそれらの継続 HEM が残っている場合、Engine は `result = true` を返してはならない。
+
+この場合、Engine は shutdown reply body の `result` を `false` とする。
+
+`result = false` は、Engine 側 application が終了不能または拒否と判断したこと、または Engine 側 HEMP 実装が HEMP protocol state として正常終了可能ではないと判断したことを表す。
+
+Engine 側 application がどの状態を終了可能または終了不能と判断するかは、HEMP Core では定義しない。
+
+Engine 側 application は、未完了の HEM Timeline、未完了の通常 HEM 通信、内部処理、外部リソース状態、ユーザー操作、または application 固有の条件を判断材料としてよい。
+
+この節における `result = false` は、Body Contract に合う shutdown post に対する通常の shutdown 可否判定を表し、shutdown post の形式不正、HEMP flow violation、または shutdown Body Contract failure を意味しない。
 
 shutdown post body が Body Contract に合わない場合の failure response policy は、`09-failure-handling.md` で定義する。
 
@@ -365,13 +438,19 @@ Header validation および flow validation が成功している場合、receiv
 
 この場合も、HEMP session は正常終了しない。
 
-### 10.6 shutdown 成功後
+`result = false` の場合、HEMP session は終了状態へ移行しない。
 
-`result = true` の shutdown reply 完了後、HEMP session は正常終了状態になる。
+transport close、transport 再利用、Engine process 終了の具体手順は、HEMP Core ではなく Transport Binding または実装側が定義する。
 
-`result = true` の shutdown reply を送信した後、Engine は同じ HEMP session 上で新しい HEM を送信してはならない。
+### 10.7 shutdown post 後の送信制約
 
-`result = true` の shutdown reply を受信した後、Host は同じ HEMP session 上で新しい HEM を送信してはならない。
+Host は、shutdown post を送信した後、対応する shutdown reply を受信するまで、新たな HEM を送信してはならない。
+
+ここでいう新たな HEM には、未完了の論理 post 送信、論理 reply 送信、または論理 notice 送信を継続するための後続 HEM も含む。
+
+Engine は、`result = true` の shutdown reply を送信した後、新たな HEM を送信してはならない。
+
+ここでいう新たな HEM には、未完了の論理 post 送信、論理 reply 送信、または論理 notice 送信を継続するための後続 HEM も含む。
 
 ---
 
@@ -383,11 +462,19 @@ Header validation および flow validation が成功している場合、receiv
 channel = -4
 ```
 
-`cancel` は、Agreement 成立後に Host が Engine へ application channel 上の進行中 HEM Timeline の cancel を要求するための protocol channel である。
+`cancel` は、Agreement 成立後に使用できる、Host から Engine へのキャンセル要求用 protocol channel である。
 
-現行 `cancel` channel は Host から Engine への cancel request を扱う。
+`cancel` は、対象 application channel + thread 上で進行中の HEM Timeline に対するキャンセル要求である。
+
+現行 `cancel` channel が対象にできる HEM Timeline は、`service provider side = engine` の application channel 上の HEM Timeline に限る。
+
+`service provider side = host` の application channel 上の HEM Timeline は、現行 `cancel` channel の対象ではない。
 
 Engine から Host への cancel が必要な場合は、現行 `cancel` channel を両方向化せず、将来の別 protocol channel または別仕様で扱う。
+
+`cancel` は対象 HEM Timeline の reply を代替しない。
+
+`cancel` は対象 HEM Thread を即時 close しない。
 
 ### 11.2 許可される direction / role
 
@@ -418,54 +505,62 @@ notice
 
 `cancel` の `abort` は常に `false` とする。
 
-`cancel` post の Core Header field は、次の固定値を持つ。
+`cancel` post の Core Header field は、次の値を持つ。
 
 ```text
 cancel post Core Header semantic field set:
   direction = to_engine
   role      = post
   channel   = -4
-  thread    = 1
+  thread    = N
   seq       = 1
   end       = true
   close     = true
   abort     = false
 ```
 
-`cancel` reply の Core Header field は、次の固定値を持つ。
+この `thread` は例示値であり、固定値ではない。
+
+`cancel` post の `thread` は、Host が `channel = -4` 内で割り当てる cancel request 用 HEM Thread 番号である。
+
+`cancel` reply header は、対応する cancel post と同じ `channel + thread` を使う。
 
 ```text
 cancel reply Core Header semantic field set:
   direction = to_host
   role      = reply
   channel   = -4
-  thread    = 1
+  thread    = N
   seq       = 2
   end       = true
   close     = true
   abort     = false
 ```
 
-### 11.4 post body
+同じ `channel = -4` 内で、open 状態または closing 状態の cancel request thread 番号を再利用してはならない。
 
-`CancelPostBody` は、HEMP が定義する必須 field として次を持つ。
+`cancel` reply が完了した時点で、その `channel = -4 / thread = N` は closed になり、再利用可能である。
+
+### 11.4 cancel request 同時数
+
+Host は、Agreement 済み `body.limits.protocol.cancel.in_flight_requests` を超えて、同時に未完了の cancel request を開始してはならない。
+
+Host が Agreement 済み `body.limits.protocol.cancel.in_flight_requests` を超えて新しい cancel request を開始した場合、HEMP flow violation とする。
+
+`body.limits.protocol.cancel.in_flight_requests` は、`06-agreement-limits.md` で定義する。
+
+### 11.5 post body
+
+`cancel` post body は、HEMP が定義する必須 field として `target` と `reason` を持つ。
 
 ```text
-target
-reason
+cancel post body semantic fields:
+  target.channel = 1
+  target.thread  = 12
+  reason         = ""
 ```
 
-`reason` は string である。
-
-`reason` の空文字列は有効である。
-
 `target.channel` は、`channel > 0` の application channel を指定する。
-
-`target.channel` は、Agreement 済み Application Channel Table に存在しなければならない。
-
-現行 `cancel` channel が対象にできる `target.channel` は、`service provider side = engine` の application channel に限る。
-
-`service provider side = host` の application channel 上の HEM Timeline は、現行 `cancel` channel の対象ではない。
 
 `target.thread` は、`target.channel` 内の HEM Thread を指定する。
 
@@ -483,23 +578,41 @@ target.thread が進行中の HEM Timeline を持たない。
 対象 HEM Timeline が application または実装の判断でキャンセル可能ではない。
 ```
 
-対象をキャンセル可能ではないものとして `result = false` を返す場合、cancel request message 自体が正しければ、HEMP flow violation にはしない。
+`target` が、post が `abort = true` で終端済みであり、対応 reply がまだ完了していない HEM Timeline を指す場合、その HEM Timeline は進行中の HEM Timeline として扱う。
+
+この場合、その対象は `target.thread` が進行中の HEM Timeline を持たない場合には該当しない。
+
+ただし、その対象 HEM Timeline が application または実装の判断でキャンセル可能ではない場合、cancel reply body の `result` を `false` とする。
+
+対象をキャンセル可能ではないものとして `result = false` を返す場合、cancel message 自体が正しければ、HEMP flow violation にはしない。
 
 target.channel の service provider side が engine ではないことは、cancel Body Contract failure ではない。
 
 この場合、receiver は cancel reply body の `result = false` によって、対象がキャンセル可能ではないことを返す。
 
-### 11.5 reply body
+`reason` は required semantic field である。
 
-`CancelReplyBody.result` は presence required である。
+`reason` の具体的な値、意味、分類、命名規則は HEMP Core では定義しない。
 
-`CancelReplyBody.message` は presence required である。
+`reason` の内容は、HEMP を利用する application 側が決める。
 
-`message` は non-empty でなければならない。
+`reason` の空文字列は有効とする。
 
-`result = true` は、cancel request が受け入れられたことを表す。
+### 11.6 reply body
 
-`result = true` は、対象 HEM Timeline が正常完了したこと、aborted 終端したこと、またはすでに停止済みであることを意味しない。
+`cancel` reply body は、HEMP が定義する必須 field として `result` と `message` を持つ。
+
+```text
+cancel reply body semantic fields:
+  result = true
+  message = "Cancel request is accepted."
+```
+
+`result` は、キャンセル要求を受け付けたかどうかを表す。
+
+`result = true` は、対象処理が停止済みであることを意味しない。
+
+`result = true` は、対象 HEM Timeline が完了済みであること、対象 reply が `abort = true` で終端すること、または対象 reply が正常完了することも意味しない。
 
 `result = false` は、cancel post body が形式上 valid であっても、対象 HEM Timeline が cancel request の対象として受け入れられなかったことを表す。
 
@@ -523,17 +636,51 @@ Header validation および flow validation が成功している場合、receiv
 
 この場合、cancel request は受け付けられない。
 
-### 11.6 cancel 受理後の対象 Timeline 扱い
+HEMP Core は、`cancel` reply body に `target` field を定義しない。
+
+受信側は、`cancel` reply body に `target` が含まれる場合、それを未知fieldとして無視する。
+
+HEMP 実装は、`cancel` reply body に `target` を送信しないことを推奨する。
+
+`cancel` reply がどの cancel request に対応するかは、cancel reply header の `channel + thread` によって判断する。
+
+cancel 対象の `target` は、対応する cancel post body の `target` によって判断する。
+
+`cancel` header の `thread` は cancel request 自体の HEM Thread であり、`cancel` post body の `target.thread` は cancel 対象の HEM Thread である。
+
+### 11.7 cancel と abort の関係
+
+cancel reply body の `result = true` は、cancel request の受理のみを表す。
+
+`result = true` は、対象 HEM Timeline の処理が停止済みであることを意味しない。
+
+`result = true` は、対象 HEM Timeline が完了済みであることを意味しない。
+
+`result = true` は、対象 HEM Timeline が aborted HEM Timeline として完了することを意味しない。
+
+`result = true` は、対象 HEM Timeline が normal completed HEM Timeline として完了することも意味しない。
+
+対象 HEM Timeline の完了状態は、対象 application channel 上の実際の HEM Timeline の完了状態によって判断する。
 
 現行 `cancel` channel が対象にできる HEM Timeline は、`service provider side = engine` の application channel 上の HEM Timeline に限る。
 
 したがって、cancel が受理された対象 HEM Timeline において、対象 reply の sender は Engine である。
 
-cancel を受理した結果として、HEMP session を継続したまま対象の論理 reply 送信を正常な application reply body として完了させない場合、Engine は対象 reply を `abort = true` で終端する。
+Engine が cancel を受理した結果、HEMP session を継続したまま対象の論理 reply 送信を正常な application reply body として完了させない場合、Engine は対象 reply を `abort = true` で終端する。
 
-Engine は、対象 reply を正常完了してよい。
+この場合、対象 HEM Timeline は aborted HEM Timeline として完了する。
 
-`cancel` reply body の `result = true` は、対象 reply が正常完了したこと、aborted 終端したこと、またはすでに停止済みであることを意味しない。
+Engine が cancel を受理した後でも、対象処理を停止しない、または停止できない場合、Engine は対象 reply を `abort = false` で正常完了してよい。
+
+Application Body Contract が、キャンセルされた結果を正常な application reply body として定義する場合、Engine は対象 reply を `abort = false` で正常完了してよい。
+
+対象 reply を正常完了させるか `abort = true` で終端させるか、`abort = true` で終端させる場合の abort body の内容、および abort body 内の診断情報の意味は、Application Body Contract または実装側が定義してよい。
+
+HEMP Core は、cancel の受理と対象 HEM Timeline の abort 終端との間に、強制的な関係を定義しない。
+
+Host は、cancel reply body の `result = true` だけを根拠に、対象 HEM Timeline が完了した、停止した、正常完了した、または aborted 状態になったと判断してはならない。
+
+`cancel` は対象 HEM Timeline の reply を代替しない。
 
 ---
 
@@ -569,10 +716,13 @@ failure response policy は、`09-failure-handling.md` で定義する。
 この文書では、次を定義しない。
 
 ```text
-- agreement body / limits body の詳細
-- HEM Payload encoding の具体的な wire 表現
-- application channel ごとの Body Contract
-- transport failure の詳細
-- retry / reconnect policy
+- agreement body / limits の詳細
+- Channel Table / digest の canonical byte sequence
+- HEM frame / HEM Length Header の構造
+- Core Header field の個別定義
+- HEM Thread lifecycle 全体
+- Standard Data Body の詳細
+- failure response policy の詳細
+- Transport Binding の具体仕様
 - Engine から Host への cancel 用 protocol channel
 ```
