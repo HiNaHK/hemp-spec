@@ -20,7 +20,7 @@ Transport Binding は、HEMP protocol specification の一部である。
 
 Transport Binding は、単なる実装都合、補助文書、または optional addon ではない。
 
-HEMP を実際に送受信するには、HEM frame を具体的な transport 上で運ぶ必要がある。Transport Binding は、そのために必要な実通信方向、順序保証単位、HEM frame delivery、Transport Binding Profile、および concrete Transport Binding definitions を定義する。
+HEMP を実際に送受信するには、HEM frame を具体的な transport 上で運ぶ必要がある。Transport Binding は、そのために必要な HEM delivery path、ordered delivery unit、HEM frame delivery、Transport Binding Profile、および concrete Transport Binding definitions を定義する。
 
 ただし、Transport Binding は HEMP Core が定義する protocol semantics を変更しない。
 
@@ -65,12 +65,12 @@ Transport Binding は、HEMP Core semantics と矛盾する transport-specific r
 Transport Binding は、HEMP Core が定義する HEM frame を transport 上で送受信するために、次を定義する。
 
 ```text
-real communication direction
-ordering unit
+HEM delivery path
+ordered delivery unit
 HEM frame mapping
 HEM frame boundary handling
 HEM frame sequence delivery
-relationship between direction field and real communication direction
+relationship between direction field and HEM delivery path
 Transport Binding instance
 relationship between Transport Binding instance and HEMP session
 transport failure boundary
@@ -79,11 +79,11 @@ Transport Binding Profile
 concrete Transport Binding definitions
 ```
 
-Transport Binding は、具体的な transport の形に応じて、HEM frame sequence をどの順序保証単位で運ぶかを定義する。
+Transport Binding は、具体的な transport の形に応じて、HEM frame sequence をどの ordered delivery unit で運ぶかを定義する。
 
-Transport Binding は、各順序保証単位が Host -> Engine または Engine -> Host のどちらの実通信方向に属するかを定義する。
+Transport Binding は、各 ordered delivery unit が Host -> Engine HEM delivery path または Engine -> Host HEM delivery path のどちらに属するかを定義する。
 
-Transport Binding は、受信した HEM frame の実通信方向が HEM Header の `direction` と一致することを検証できる形で、HEM frame を HEMP Core へ渡さなければならない。
+Transport Binding は、受信した HEM frame の HEM delivery path が HEM Header の `direction` と一致することを検証できる形で、HEM frame を HEMP Core へ渡さなければならない。
 
 ## 5. What Transport Binding Does Not Redefine
 
@@ -170,7 +170,7 @@ v1.0.0 の Transport Binding specification は、次の文書で構成する。
 
 `01-overview-and-core-relationship.md` は、Transport Binding の目的と HEMP Core との関係を定義する。
 
-`02-transport-model.md` は、実通信方向、順序保証単位、HEM frame mapping、Transport Binding instance、および HEMP session との関係を定義する。
+`02-transport-model.md` は、HEM delivery path、ordered delivery unit、HEM frame mapping、Transport Binding instance、および HEMP session との関係を定義する。
 
 `03-transport-requirements-and-frame-handling.md` は、transport に要求する性質、HEM frame boundary、HEM frame sequence、transport failure、および `abort` と transport failure の境界を定義する。
 
