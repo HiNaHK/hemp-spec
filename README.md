@@ -6,12 +6,13 @@
 
 ## 読み順
 
-HEMP の仕様を確認する場合は、まず次の順に読む。
+HEMP の v1.0.0 仕様本文を確認する場合は、まず次の順に読む。
 
 1. `specs/core/`
 2. `specs/proto-encoding/`
 3. `specs/transport-binding/`
-4. `specs/transport-binding/local-ipc/`
+
+`specs/transport-binding/local-ipc/` は、Local Process IPC Binding に関する未確定または将来整理対象の文書を置く場所です。現時点では、v1.0.0 の確定済み仕様本文としては扱いません。
 
 `validation/` 配下の資料は、仕様本文ではありません。必要に応じて、仕様本文の確認後に参照します。
 
@@ -25,11 +26,17 @@ HEMP の仕様を確認する場合は、まず次の順に読む。
 
 HEMP / Host-Engine Message Protocol は、Host と Engine の間で message をやり取りするための protocol です。
 
-HEMP では、処理を依頼する側を Host、処理を実行して応答する側を Engine と呼びます。Engine から Host へ、応答だけでなく通知を送ることもあります。
+HEMP では、Host と Engine という2つの役割を区別します。
+
+HEMP の application channel では、channel ごとにどちらが service provider side であるかを定義できます。
+
+service provider side によって、post / reply / notice の向きが決まります。
+
+そのため、Host が常に依頼側で Engine が常に応答側であるとは限りません。
 
 ここでいう message は、Host と Engine の間で送受信される1つの通信単位です。HEMP では、この message を HEM / Host-Engine Message と呼びます。HEM には、処理の依頼、応答、通知、または通信状態を示す情報が含まれます。
 
-典型的には、同一コンピュータ上の別 process 同士が通信する IPC のような構成で使うことを想定しています。
+典型的には、同一コンピュータ上の別プログラム同士が通信する IPC のような構成で使うことを想定しています。
 
 ## HEMP の目的と特徴
 
@@ -40,7 +47,7 @@ HEMP は、何を送るのか、どの順番で扱うのか、どこまで送っ
 主な特徴は次のとおりです。
 
 - **Host と Engine の役割を分ける**  
-  処理を依頼する側と、処理を実行して応答する側を分けて考えます。
+  Host と Engine という2つの役割を区別します。application channel では、service provider side によって post / reply / notice の向きが決まります。
 
 - **HEM を通信の単位として扱う**  
   依頼、応答、通知などを HEM として扱い、Host と Engine の間で送受信します。
