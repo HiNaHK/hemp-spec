@@ -366,11 +366,13 @@ chunking banned flag = false:
 
 固定 data とは、送信開始時点で全体 byte 列が存在する有限 data である。
 
-固定 data では、送信側は送信開始前に、その data を1つまたは複数の HEM へ分割する送信計画を作成しなければならない。
+固定 data では、送信側は送信開始前に、生成する HEM が Standard Data Body rules、Agreement 済み limits、seq 上限、対象 channel の性質、Core Header の有効な組み合わせ、および適用される Transport Binding / Profile の peer-visible な送信条件を満たすことを確認できなければならない。
 
-### 13.2 送信計画
+この文書は、送信側実装の内部で事前計画表、buffer、queue、または特定の分割アルゴリズムを持つことを要求しない。
 
-送信計画は、次をすべて満たさなければならない。
+### 13.2 送信条件
+
+固定 data の各 HEM と論理送信全体は、次を満たさなければならない。
 
 ```text
 - 各 HEM の encoded HEM Payload length が body.limits.hem_payload_length を超えない
@@ -379,7 +381,11 @@ chunking banned flag = false:
 - 論理送信全体の encoded HEM Payload length 合計が role.*.payload_total_length を超えない
 - seq 上限を超えない
 - 対象 channel の chunking 可否に違反しない
+- Core Header の有効な組み合わせに違反しない
+- 適用される Transport Binding / Profile の peer-visible な送信条件に違反しない
 ```
+
+適用される Transport Binding / Profile の peer-visible な送信条件には、Message Boundary Profile の `transport message payload max` などを含む。
 
 `body.limits.hem_payload_length` は、application channel 上の通常 HEM 通信で許可する単体 encoded HEM Payload length 上限である。
 
@@ -389,16 +395,16 @@ Standard Data Body の data bytes fragment には、別途 `standard_data_body_d
 
 ### 13.3 chunking が許可されている場合
 
-`chunking banned flag = false` の channel で固定 data を送信する場合、送信側は、終端 HEM を除く各 HEM について、その HEM で合法に載せられる最大量の data bytes を載せなければならない。
+`chunking banned flag = false` の channel で固定 data を送信する場合、送信側は、Agreement 済み limits、seq 上限、対象 channel の性質、Core Header の有効な組み合わせ、および適用される Transport Binding / Profile の peer-visible な送信条件を満たす範囲で、data を複数の通常 Data Body HEM に分割してよい。
 
-ここでいう合法に載せられる最大量は、少なくとも次を同時に満たす最大量である。
+HEMP Core は、終端 HEM を除く各 HEM について、その HEM に合法に載せられる最大量の data bytes を載せることを要求しない。
+
+ただし、通常の途中 HEM は `end = false, abort = false` であり、1 byte 以上の data bytes を運ばなければならない。
+
+これは次を意味する。
 
 ```text
-- len(通常 body bytes) <= standard_data_body_data_capacity
-- encoded HEM Payload length <= body.limits.hem_payload_length
-- logical send encoded HEM Payload length total <= role.*.payload_total_length
-- seq 上限を超えない
-- 対象 channel の chunking 可否に違反しない
+len(通常 body bytes) >= 1
 ```
 
 `standard_data_body_data_capacity = 0` の場合、非終端 HEM は `end = false, abort = false` かつ non-empty data を満たせないため、通常途中 HEM として送信できない。
@@ -414,15 +420,15 @@ abort = false
 
 `chunking banned flag = true` の channel で固定 data を送信する場合、その data は1 HEMで完結しなければならない。
 
-1 HEM として表現した場合の encoded HEM Payload length または `len(通常 body bytes)` が、Agreement 済み limits または `standard_data_body_data_capacity` を満たさない場合、その data はその channel では送信できない。
+1 HEM として表現した場合の encoded HEM Payload length、`len(通常 body bytes)`、または適用される Transport Binding / Profile の peer-visible な送信条件を満たさない場合、その data はその channel では送信できない。
 
 ### 13.5 送信不可時の扱い
 
-固定 data について、送信開始前に送信計画が Agreement 済み limits または channel 性質を満たせないと分かった場合、送信側は HEM を送信してはならない。
-
-この場合、送信側実装は送信元 application へローカル送信エラーを返さなければならない。
+固定 data について、送信開始前に Agreement 済み limits、channel 性質、Core Header の有効な組み合わせ、または適用される Transport Binding / Profile の peer-visible な送信条件を満たせないと分かった場合、送信側は HEM を送信してはならない。
 
 この場合、まだ論理送信は開始されていないため、`abort = true` HEM を送信する必要はない。
+
+送信元 application への返却値、例外、通知、error object、または API 上の扱いは、HEMP Core では定義しない。
 
 ---
 
@@ -434,70 +440,47 @@ abort = false
 
 逐次生成 data は、Standard Data Body の1つの論理送信として扱う。
 
-### 14.2 送信側 buffer
+### 14.2 送信側の内部保持
 
-送信側は、逐次生成 data の未送信 data bytes を保持する buffer を持つ。
+送信側実装は、逐次生成 data の未送信 data bytes を保持する内部状態を持ってよい。
 
-送信側は、application から供給された data bytes をこの buffer に追加する。
+この文書は、その内部状態を buffer、queue、stream object、timer object、または特定の API として定義しない。
 
-### 14.3 size flush
+送信側が未送信 data bytes をどのように保持する場合でも、wire 上で送信される HEM は、この文書の Standard Data Body rules、Agreement 済み limits、seq 上限、対象 channel の性質、Core Header の有効な組み合わせ、および適用される Transport Binding / Profile の peer-visible な送信条件を満たさなければならない。
 
-buffer 内の data bytes が、次の HEM に載せられる最大 data 量に達した場合、送信側は time flush timer の満了を待たずに HEM 生成処理へ進まなければならない。
+### 14.3 通常途中 HEM の生成契機
 
-次の HEM に載せられる最大 data 量は、`standard_data_body_data_capacity`、encoded HEM Payload length 上限、role 別 total 上限、seq 上限、および対象 channel の chunking 可否を同時に満たす範囲で決まる。
+送信側実装は、逐次生成 data の通常途中 HEM を生成する契機を実装方針として定義してよい。
 
-ただし、生成する HEM は Agreement 済み limits、seq 上限、対象 channel の chunking 可否、および Core Header の有効な組み合わせを満たさなければならない。
+生成契機には、未送信 data bytes の量、時間、明示的な flush 操作、実装設定、または application 側の指示を使ってよい。
 
-次に生成しようとする HEM を通常 Data Body HEM として送信すると、同じ論理送信を合法に継続または正常完了できない場合、送信側はこの文書の abort 規則に従わなければならない。
+HEMP Core は、特定の size flush algorithm、time flush algorithm、timer start rule、timer reset rule、または最大量充填 rule を定義しない。
 
-### 14.4 time flush
-
-逐次生成 data を扱う Standard Data Body 送信側実装は、time flush policy を持たなければならない。
-
-ここでいう time flush は、まだ論理送信が正常終端していない状態で、一定時間 buffer された data bytes を途中 HEM として送信するための送信契機である。
-
-具体的な time flush の時間値は、この文書では固定しない。
-
-具体値は、実装設定またはユーザー設定とする。
-
-Application Body Contract は、原則として time flush の具体値を定義しない。
-
-Agreement に time flush の具体値を追加することも、この文書では要求しない。
-
-### 14.5 time flush timer
-
-time flush timer は、未送信 buffer が empty から non-empty になった時に開始する。
-
-timer 中に追加 data が供給されても、timer はリセットしない。
-
-buffer が次の HEM に載せられる最大 data 量に達した場合、送信側は timer 満了を待たずに size flush 規則に従う。
-
-end intent が示された場合、送信側は timer 満了を待たずに終端 HEM の生成処理へ進まなければならない。
-
-このとき、正常終端として送信できる場合は正常終端規則に従い、正常終端として送信できない場合は abort 規則に従う。
-
-### 14.6 通常の途中 HEM
-
-逐次生成 data で、まだ end intent が示されていない状態で送信する通常 Data Body HEM は、次を持つ。
+ただし、送信側が通常途中 HEM を生成する場合、その HEM は次を満たさなければならない。
 
 ```text
 end = false
 abort = false
-```
-
-この HEM は、1 byte 以上の data bytes を運ばなければならない。
-
-これは次を意味する。
-
-```text
 len(通常 body bytes) >= 1
 ```
 
-`standard_data_body_data_capacity = 0` の場合、通常の途中 HEM はこの条件を満たせないため送信できない。
+また、その HEM は Agreement 済み limits、seq 上限、対象 channel の性質、Core Header の有効な組み合わせ、および適用される Transport Binding / Profile の peer-visible な送信条件を満たさなければならない。
 
-### 14.7 正常終端
+次に生成しようとする HEM を通常 Data Body HEM として送信すると、同じ論理送信を合法に継続または正常完了できない場合、送信側はこの文書の abort 規則に従わなければならない。
 
-application が論理送信の正常終端を示し、かつ未送信 buffer と今回供給された data bytes を正常終端として送信できる場合、送信側はそれらを送信し、最後の HEM を次の状態にしなければならない。
+### 14.4 time flush policy
+
+逐次生成 data を扱う送信側実装は、time flush policy を持ってよい。
+
+ここでいう time flush は、まだ論理送信が正常終端していない状態で、一定時間保持された data bytes を途中 HEM として送信するための実装上の送信契機である。
+
+具体的な time flush の有無、時間値、timer の開始条件、timer の reset 条件、および flush API は、HEMP Core では定義しない。
+
+Agreement に time flush の具体値を追加することも、この文書では要求しない。
+
+### 14.5 正常終端
+
+application または送信側実装が論理送信の正常終端を決定し、かつ未送信 data bytes を正常終端として送信できる場合、送信側はそれらを送信し、最後の HEM を次の状態にしなければならない。
 
 ```text
 end = true
@@ -506,20 +489,21 @@ abort = false
 
 この終端 HEM は、empty data を運んでよい。
 
-### 14.8 正常継続不能 / 正常完了不能時の abort
+この終端 HEM も、Agreement 済み limits、seq 上限、対象 channel の性質、Core Header の有効な組み合わせ、および適用される Transport Binding / Profile の peer-visible な送信条件を満たさなければならない。
+
+### 14.6 正常継続不能 / 正常完了不能時の abort
 
 逐次生成 data において、送信側が次の Data Body HEM を生成しようとする時点で、次のいずれかに該当する場合、送信側は以後の通常 Data Body HEM を送信してはならない。
 
 ```text
-1. end intent がまだ示されておらず、
+1. 正常終端がまだ決定されておらず、
    次の HEM を end = false, abort = false として送信すると、
    その後に同じ論理送信を合法に継続または終端できない場合。
 
-2. end intent が示されているが、
-   未送信 buffer と今回供給された data bytes を、
-   end = true, abort = false の正常終端として、
-   Agreement 済み limits、seq 上限、対象 channel の chunking 可否、
-   および Core Header の有効な組み合わせを満たす形で送信できない場合。
+2. 正常終端が決定されているが、
+   未送信 data bytes を end = true, abort = false の正常終端として、
+   Agreement 済み limits、seq 上限、対象 channel の性質、
+   Core Header の有効な組み合わせ、または適用される Transport Binding / Profile の peer-visible な送信条件を満たす形で送信できない場合。
 ```
 
 この場合、送信側は次の HEM を送信し、その論理送信を aborted 状態で終端しなければならない。
@@ -531,25 +515,25 @@ abort = true
 
 `abort = true` の HEM は、Standard Data Body の正常な data bytes fragment を運ばない。
 
-`abort = true` の HEM も通常の HEM と同様に、Agreement 済み limits、seq 上限、対象 channel の chunking 可否、および Core Header の有効な組み合わせを満たさなければならない。
+`abort = true` の HEM も通常の HEM と同様に、Agreement 済み limits、seq 上限、対象 channel の性質、Core Header の有効な組み合わせ、および適用される Transport Binding / Profile の peer-visible な送信条件を満たさなければならない。
 
 この条件には、少なくとも次を含む。
 
 ```text
 - 次の通常途中 HEM が role.*.hem_count 上の最後の合法 HEM になる場合。
-- 次の通常途中 HEM を送ると role.*.payload_total_length の残りが、後続の終端 HEM を構成できない値になる場合。
+- 次の通常途中 HEM を送ると role.*.payload_total_length の残りが、後続の終端 HEMを構成できない値になる場合。
 - 次の通常途中 HEM を送ると seq 上限に到達し、後続の終端 HEM を構成できない場合。
-- end intent が示された時点で、残りの未送信 data bytes を正常終端として送信すると、Agreement 済み limits、seq 上限、対象 channel の chunking 可否、または Core Header の有効な組み合わせに違反する場合。
+- 正常終端が決定された時点で、残りの未送信 data bytes を正常終端として送信すると、Agreement 済み limits、seq 上限、対象 channel の性質、Core Header の有効な組み合わせ、または適用される Transport Binding / Profile の peer-visible な送信条件に違反する場合。
 - 対象 channel の chunking 可否により、end = false の通常途中 HEM を送れない場合。
 ```
 
-送信側は、application が将来 end intent を示すかどうかを待ってはならない。
+送信側は、application が将来正常終端を示すかどうかを待ってはならない。
 
 送信側は、application の未来の動作を推測して送信状態を変更してはならない。
 
 送信側は、`end = false, abort = false` の通常途中 HEM を送信した後に、同じ論理送信を合法に継続または終端できない状態を作ってはならない。
 
-### 14.9 abort HEM の body
+### 14.7 abort HEM の body
 
 `abort = true` の HEM は、Standard Data Body の正常な data bytes fragment を運ばない。
 
@@ -561,13 +545,11 @@ Protobuf Encoding specification では、この abort body representation は `a
 
 Standard Data Body は、abort body の内部形式、reason、message、diagnostic 情報を定義しない。
 
-### 14.10 送信元 application への通知
+### 14.8 送信元 application への扱い
 
-逐次生成 data で `abort = true` によって論理送信を aborted 終端した場合、送信側実装は送信元 application へ、当該 Standard Data Body 送信が正常完了しなかったことを通知しなければならない。
+逐次生成 data で `abort = true` によって論理送信を aborted 終端した場合、送信元 application へ何を返すか、どのような通知を行うか、どの error object を使うか、またはどの API event を発生させるかは、HEMP Core では定義しない。
 
-この通知はローカル送信エラーまたは aborted 終端発生通知として扱ってよい。
-
-wire 上の `abort = true` と、送信元 application へのローカル通知は両立する。
+wire 上の `abort = true` と、送信元 application への実装固有の通知は両立してよい。
 
 ---
 
@@ -600,11 +582,11 @@ end = false
 abort = false
 ```
 
-sender は、このような HEM を生成してはならない。
+送信側は、このような HEM を生成してはならない。
 
-送信 API 上、empty data かつ end intent なしに相当する操作は、ローカル使用エラーとして扱わなければならない。
+送信 API 上、empty data かつ正常終端指示なしに相当する操作をどう扱うかは、HEMP Core では定義しない。
 
-receiver が、Standard Data Body の通常 HEM としてこれを受信した場合、Standard Data Body rules に関する HEM Body Contract failure とする。
+受信側が、Standard Data Body の通常 HEM としてこれを受信した場合、Standard Data Body rules に関する HEM Body Contract failure とする。
 
 ### 15.3 abort = true の場合
 
@@ -672,27 +654,32 @@ Protobuf Encoding specification では、application channel の通常 body は 
 - Agreement 済み limits 超過。
 - encoded HEM Payload length > body.limits.hem_payload_length。
 - channel / thread / role / direction の flow rule 違反。
+- 適用される Transport Binding / Profile の peer-visible な送信条件違反または受信条件違反。
 - aborted 終端後に同じ論理送信の継続 HEM を受信したこと。
 - abort = true HEM の abort body が通常 Standard Data Body body として解釈できないこと。
 ```
 
-これらは、該当する HEMP Core failure 分類に従う。
+これらは、該当する HEMP Core failure 分類、Transport Binding violation、または transport failure の境界に従う。
 
 ---
 
-## 18. failure と送信元 application への扱い
+## 18. failure と送信側の扱い
 
 ### 18.1 固定 data の送信前 failure
 
-固定 data で、送信開始前に Agreement 済み limits または channel 性質を満たせないことが分かった場合、送信側は HEM を送信してはならない。
+固定 data で、送信開始前に Agreement 済み limits、channel 性質、Core Header の有効な組み合わせ、または適用される Transport Binding / Profile の peer-visible な送信条件を満たせないことが分かった場合、送信側は HEM を送信してはならない。
 
-この場合、送信側は送信元 application へローカル送信エラーを返さなければならない。
+この場合、まだ論理送信は開始されていないため、`abort = true` HEM を送信する必要はない。
+
+送信元 application への返却値、例外、通知、error object、または API 上の扱いは、HEMP Core では定義しない。
 
 ### 18.2 逐次生成 data の途中 failure
 
-逐次生成 data で、正常継続または正常完了できないことが確定した場合、送信側は `end = true, abort = true` の HEM によって論理送信を aborted 終端しなければならない。
+逐次生成 data で、正常継続または正常完了できないことが確定した場合、送信側は、送信可能であれば `end = true, abort = true` の HEM によって論理送信を aborted 終端しなければならない。
 
-送信側は、`abort = true` によって論理送信を aborted 終端した場合、送信元 application へローカル送信エラーまたは aborted 終端発生を通知しなければならない。
+`abort = true` の HEM も、Agreement 済み limits、seq 上限、対象 channel の性質、Core Header の有効な組み合わせ、および適用される Transport Binding / Profile の peer-visible な送信条件を満たさなければならない。
+
+送信元 application への返却値、例外、通知、error object、または API 上の扱いは、HEMP Core では定義しない。
 
 ### 18.3 transport failure との関係
 
@@ -712,7 +699,7 @@ Standard Data Body は、Transport Binding を再定義しない。
 
 Transport Binding は、Standard Data Body HEM を通常の HEM frame として運ぶ。
 
-Standard Data Body の HEM も、Transport Binding が定義する HEM frame boundary、complete HEM frame、direction、順序保証単位、transport failure 規則に従う。
+Standard Data Body の HEM も、Transport Binding が定義する HEM frame boundary、complete HEM frame、direction、順序保証単位、transport failure 規則、および peer-visible な Transport Binding / Profile level の送受信条件に従う。
 
 Transport Binding は、Standard Data Body の data bytes、empty data、time flush、abort 終端を、transport-level signal として再定義してはならない。
 
@@ -731,6 +718,8 @@ Transport Binding は、Standard Data Body の data bytes、empty data、time fl
 - Agreement に新しい Standard Data Body 専用 limit を追加すること
 - text / JSON value / record / event 用の標準 body 規則
 - unbounded / long-lived stream の標準規則
+- buffer / queue / timer / flush API の具体仕様
 - time flush の具体的な時間値
+- 送信元 application への返却値、例外、通知、error object、または API event
 - transport timeout / retry / reconnect policy
 ```
