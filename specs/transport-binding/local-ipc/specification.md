@@ -1,30 +1,38 @@
 # HEMP Local Process IPC Binding
 
-Status: Specification  
-Specification version: v1.0.0  
-Scope: HEMP Transport Binding specification
+Status: Draft / Future Binding Material  
+Specification version: Not assigned  
+Scope: Draft material for a possible future HEMP Transport Binding
+
+この文書は、HEMP v1.0.0 の確定済み仕様本文ではない。
+
+この文書は、将来 Local Process IPC Binding を concrete Transport Binding として定義する場合に備えた draft material である。
+
+この文書の内容を、HEMP v1.0.0 の normative requirement として扱ってはならない。
 
 ## 1. Purpose
 
-この文書は、HEMP Local Process IPC Binding を定義する。
+この文書は、将来の HEMP Local Process IPC Binding 候補を整理する。
 
-Local Process IPC Binding は、同一コンピュータ上で動作する Host process と Engine process の間で HEMP を送受信するための concrete Transport Binding である。
+Local Process IPC Binding は、同一コンピュータ上で動作する Host process と Engine process の間で HEMP を送受信するための将来の concrete Transport Binding 候補である。
 
-Local Process IPC Binding は、HEMP Core semantics を再定義しない。
+Local Process IPC Binding 候補は、HEMP Core semantics を再定義しない。
 
-Local Process IPC Binding は、HEMP Transport Binding の共通 model、requirements、および Profile rules に従う。
+Local Process IPC Binding 候補は、HEMP Transport Binding の共通 model、requirements、および Profile rules に従う必要がある。
 
-この文書は、Local Process IPC Binding として満たすべき規範要件を定義する。
+この文書は、Local Process IPC Binding として満たすべき規範要件の候補を記録する。
 
 この文書は、特定の OS API、runtime、async framework、transport library、process launch method、または endpoint mechanism を要求しない。
 
 ## 2. Relationship to HEMP Core and Transport Binding
 
-Local Process IPC Binding は、HEMP Transport Binding specification の一部である。
+Local Process IPC Binding 候補は、将来 HEMP Transport Binding specification の一部として定義され得る。
 
-Local Process IPC Binding は、HEMP Core が定義する HEM frame を、同一コンピュータ上の Host process と Engine process の間で運ぶ。
+この文書の内容は、HEMP v1.0.0 の確定済み Transport Binding specification の一部ではない。
 
-Local Process IPC Binding は、HEMP Core が定義する次の semantics を変更してはならない。
+Local Process IPC Binding 候補は、HEMP Core が定義する HEM frame を、同一コンピュータ上の Host process と Engine process の間で運ぶ。
+
+Local Process IPC Binding 候補は、HEMP Core が定義する次の semantics を変更してはならない。
 
 ```text
 HEM frame
@@ -46,13 +54,13 @@ failure classification
 HEM Body Contract
 ```
 
-Local Process IPC Binding は、HEMP Payload encoding を変更しない。
+Local Process IPC Binding 候補は、HEMP Payload encoding を変更しない。
 
-Local Process IPC Binding は、HEM Length Header の意味を変更しない。
+Local Process IPC Binding 候補は、HEM Length Header の意味を変更しない。
 
-Local Process IPC Binding は、HEMP failure classification に新しい分類を追加しない。
+Local Process IPC Binding 候補は、HEMP failure classification に新しい分類を追加しない。
 
-Local Process IPC Binding は、local transport の確立、stream、endpoint、process、pipe、または I/O abstraction を HEMP Core semantics として扱ってはならない。
+Local Process IPC Binding 候補は、local transport の確立、stream、endpoint、process、pipe、または I/O abstraction を HEMP Core semantics として扱ってはならない。
 
 ## 3. Binding Overview
 
@@ -460,7 +468,7 @@ In-memory transport または test transport は、Local Process IPC Binding の
 
 ## 20. Relationship to Other Documents
 
-この文書は、Local Process IPC Binding の concrete definition を定義する。
+この文書は、Local Process IPC Binding の draft material であり、v1.0.0 の concrete definition ではない。
 
 `02-transport-model.md` は、Transport Binding の共通 transport model、real communication direction、ordering unit、Transport Binding instance、および HEMP session との関係を定義する。
 
@@ -468,4 +476,4 @@ In-memory transport または test transport は、Local Process IPC Binding の
 
 `04-transport-profiles.md` は、Byte Stream Profile、Message Boundary Profile、および HEM frame interleave を定義する。
 
-Local Process IPC Binding は、これらの共通 Transport Binding rules に従う。
+将来 Local Process IPC Binding を正式に定義する場合、その定義はこれらの共通 Transport Binding rules に従う必要がある。
