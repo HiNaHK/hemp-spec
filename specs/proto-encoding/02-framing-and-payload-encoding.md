@@ -155,7 +155,7 @@ Receiver は、HEM frame を受信するとき、次の順序で処理する。
 ```text
 1. HEM Length Header の 4 bytes を読み取る。
 2. HEM Length Header value を big-endian unsigned integer として解釈する。
-3. HEM Length Header value が、適用される length / resource limit に照らして安全に読み取り可能であることを確認する。
+3. HEM Length Header value が、HEMP Core または適用される Transport Binding Profile が定義する peer-visible な length limit に違反しないことを確認する。
 4. 確認できた場合、HEM Length Header value が示す長さの HEM Payload bytes を読み取る。
 5. HEM Payload bytes を hemp.v1.HemPayload として Protobuf decode する。
 6. decode 済み HemPayload に対して、後続の structural validation、header validation、flow validation、Body Contract validation を適用する。
@@ -165,7 +165,7 @@ Receiver は、HEM frame を受信するとき、次の順序で処理する。
 
 手順 6 の詳細は、後続の Protobuf Encoding specification documents が定義する。
 
-HEM Length Header value が、適用される length / resource limit に照らして安全に読み取り可能でない場合、Receiver は宣言された Payload bytes の読み取りを試みる必要はない。
+HEM Length Header value が、HEMP Core または適用される Transport Binding Profile が定義する peer-visible な length limit に違反する場合、Receiver は宣言された Payload bytes の読み取りを試みる必要はない。
 
 Payload bytes が `hemp.v1.HemPayload` として Protobuf decode できない場合、その HEM は HEMP payload format failure とする。
 
@@ -186,8 +186,13 @@ HEM Length Header を 4 bytes 読めない。
 HEM Length Header value が 0 である。
 宣言された HEM Payload length 分の bytes を読めない。
 Agreement 成立前に HEM Length Header value が protocol_channel_payload_length_limit を超えている。
-frame read limit または transport-level frame resource limit により Payload bytes を安全に読み取れない。
 ```
+
+Transport Binding Profile が定義する peer-visible な Transport Binding / Profile level の limit に違反する場合、その condition は該当 Transport Binding Profile の規則に従う。
+
+実装固有の private resource limit は、interoperability 上の HEMP framing rule または transport message payload max ではない。
+
+実装が仕様上要求される peer-visible limit を扱えない場合、その実装は該当仕様または該当 concrete Transport Binding の要件を満たさない。
 
 次は HEMP payload format failure とする。
 

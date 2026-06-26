@@ -156,7 +156,7 @@ Standard Data Body では、1つの application data は、1つの HEMP 論理 p
 
 application data の境界は、HEM frame 境界ではなく、`end = true` による論理送信終端で表す。
 
-Standard Data Body は、固定 data、逐次生成 data、empty data、複数 HEM への分割、正常完了不能時の abort 連携、Data Body Body Contract failure 条件などを扱う。
+Standard Data Body は、固定 data、逐次生成 data、empty data、複数 HEM への分割、正常完了不能時の abort 連携、Standard Data Body rules に関する HEM Body Contract failure 条件などを扱う。
 
 Standard Data Body の詳細は、`08-data-body-rules.md` で定義する。
 

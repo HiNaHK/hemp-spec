@@ -125,6 +125,14 @@ message
 
 `result` は、protocol channel request を受け入れたかどうかを表す。
 
+`result = false` は、Body Contract に合う request に対する通常の拒否だけでなく、Header validation および flow validation が成功した post の Body Contract failure を、該当 protocol channel の専用 reply body で返す場合にも使用してよい。
+
+この場合の reply は、汎用 error reply ではない。
+
+この場合の reply は、該当 protocol channel の Body Contract に基づく通常の reply body である。
+
+Body Contract failure に対して reply を返す条件、state commit、および failure response policy は、`09-failure-handling.md` で定義する。
+
 `message` は required semantic field である。
 
 `message` は、`result = true` でも `result = false` でも常に送る。
@@ -157,7 +165,7 @@ channel = -1
 
 `agreement` は、Application Channel Table の Entry ではない。
 
-`agreement` の Header、Body Contract、Agreement 成立条件、Agreement failure、limits の詳細は、`06-agreement-limits.md` で定義する。
+`agreement` の Header、Body Contract、Agreement 成立条件、Agreement failure、Agreement Body Contract failure、および limits の詳細は、`06-agreement-limits.md` および `09-failure-handling.md` で定義する。
 
 ---
 
@@ -228,31 +236,37 @@ ping reply Core Header semantic field set:
   abort     = false
 ```
 
+`ping` reply 完了後、`channel = -2 / thread = 1` は closed になる。
+
 ### 9.4 post body
 
-`ping` post body は、HEMP が定義する field を持たない。
+`PingPostBody` は field を持たない empty body である。
 
-`ping` post body branch は存在しなければならない。
+`ping` post では、`ping_post` body branch が存在しなければならない。
+
+known body branch が存在しない場合は、HEM Body Contract failure ではなく、HEMP payload format failure である。
 
 受信側は、`ping` post body に未知fieldが含まれる場合、それらを意味として無視する。
 
 ### 9.5 reply body
 
-`ping` reply body は、必須 field として `result` と `message` を持つ。
+`PingReplyBody.result` は presence required である。
 
-```text
-ping reply body semantic fields:
-  result = true
-  message = "Ping is accepted."
-```
-
-`result = true` は、ping が受け入れられたことを表す。
+`result = true` は、receiver が ping request を受け入れ、その時点で HEMP post を受信し、HEMP reply を返せる状態であることを表す。
 
 `result = false` は有効値である。
 
-`message` は required semantic field である。
+`result = false` は、receiver が ping request を有効に受信し、ping reply を返したが、その ping request を肯定的な readiness confirmation としては受け入れないことを表す。
 
-`message` の空文字列は不正とする。
+`result = false` は HEMP failure ではない。
+
+`result = false` の ping reply を受信したことだけを理由に、HEMP session が正常終了、Agreement failure、HEMP failure、または transport failure になったものとして扱ってはならない。
+
+`result = false` の ping reply を受信した後の再試行、待機、利用者向け表示、または application-level 判断は、HEMP を使う application または実装側が定義する。
+
+`PingReplyBody.message` は presence required である。
+
+`PingReplyBody.message` は non-empty でなければならない。
 
 `ping` では nonce を定義しない。
 
@@ -416,6 +430,14 @@ Engine 側 application は、未完了の HEM Timeline、未完了の通常 HEM 
 
 この節における `result = false` は、Body Contract に合う shutdown post に対する通常の shutdown 可否判定を表し、shutdown post の形式不正、HEMP flow violation、または shutdown Body Contract failure を意味しない。
 
+shutdown post body が Body Contract に合わない場合の failure response policy は、`09-failure-handling.md` で定義する。
+
+Header validation および flow validation が成功している場合、receiver は `shutdown` reply body の `result = false` によって shutdown Body Contract failure を返してよい。
+
+この場合の reply は、汎用 error reply ではない。
+
+この場合も、HEMP session は正常終了しない。
+
 `result = false` の場合、HEMP session は終了状態へ移行しない。
 
 transport close、transport 再利用、Engine process 終了の具体手順は、HEMP Core ではなく Transport Binding または実装側が定義する。
@@ -444,6 +466,12 @@ channel = -4
 
 `cancel` は、対象 application channel + thread 上で進行中の HEM Timeline に対するキャンセル要求である。
 
+現行 `cancel` channel が対象にできる HEM Timeline は、`service provider side = engine` の application channel 上の HEM Timeline に限る。
+
+`service provider side = host` の application channel 上の HEM Timeline は、現行 `cancel` channel の対象ではない。
+
+Engine から Host への cancel が必要な場合は、現行 `cancel` channel を両方向化せず、将来の別 protocol channel または別仕様で扱う。
+
 `cancel` は対象 HEM Timeline の reply を代替しない。
 
 `cancel` は対象 HEM Thread を即時 close しない。
@@ -466,8 +494,6 @@ notice
 ```
 
 不正な direction / role の組み合わせを `cancel` で受信した場合、HEMP flow violation とする。
-
-Engine から Host への cancel が必要な場合は、同じ `cancel` channel を例外的に両方向化せず、別の protocol channel として定義する。
 
 ### 11.3 header
 
@@ -546,6 +572,7 @@ cancel post body semantic fields:
 
 ```text
 target.channel が Agreement 済み Application Channel Table に存在しない。
+target.channel の service provider side が engine ではない。
 target.thread が target.channel 内の open 状態の HEM Thread ではない。
 target.thread が進行中の HEM Timeline を持たない。
 対象 HEM Timeline が application または実装の判断でキャンセル可能ではない。
@@ -558,6 +585,10 @@ target.thread が進行中の HEM Timeline を持たない。
 ただし、その対象 HEM Timeline が application または実装の判断でキャンセル可能ではない場合、cancel reply body の `result` を `false` とする。
 
 対象をキャンセル可能ではないものとして `result = false` を返す場合、cancel message 自体が正しければ、HEMP flow violation にはしない。
+
+target.channel の service provider side が engine ではないことは、cancel Body Contract failure ではない。
+
+この場合、receiver は cancel reply body の `result = false` によって、対象がキャンセル可能ではないことを返す。
 
 `reason` は required semantic field である。
 
@@ -582,6 +613,28 @@ cancel reply body semantic fields:
 `result = true` は、対象処理が停止済みであることを意味しない。
 
 `result = true` は、対象 HEM Timeline が完了済みであること、対象 reply が `abort = true` で終端すること、または対象 reply が正常完了することも意味しない。
+
+`result = false` は、cancel post body が形式上 valid であっても、対象 HEM Timeline が cancel request の対象として受け入れられなかったことを表す。
+
+`result = false` には、少なくとも次を含む。
+
+```text
+target.channel が Agreement 済み Application Channel Table に存在しない。
+target.channel の service provider side が engine ではない。
+target.thread が target.channel 内の open 状態の HEM Thread ではない。
+target.thread が進行中の HEM Timeline を持たない。
+対象 HEM Timeline が application または実装の判断でキャンセル可能ではない。
+```
+
+これらは、cancel post body の形式が正しければ、HEMP flow violation ではない。
+
+これらは、cancel Body Contract failure でもない。
+
+cancel post body が Body Contract に合わない場合の failure response policy は、`09-failure-handling.md` で定義する。
+
+Header validation および flow validation が成功している場合、receiver は `cancel` reply body の `result = false` によって cancel Body Contract failure を返してよい。
+
+この場合、cancel request は受け付けられない。
 
 HEMP Core は、`cancel` reply body に `target` field を定義しない。
 
@@ -609,6 +662,10 @@ cancel reply body の `result = true` は、cancel request の受理のみを表
 
 対象 HEM Timeline の完了状態は、対象 application channel 上の実際の HEM Timeline の完了状態によって判断する。
 
+現行 `cancel` channel が対象にできる HEM Timeline は、`service provider side = engine` の application channel 上の HEM Timeline に限る。
+
+したがって、cancel が受理された対象 HEM Timeline において、対象 reply の sender は Engine である。
+
 Engine が cancel を受理した結果、HEMP session を継続したまま対象の論理 reply 送信を正常な application reply body として完了させない場合、Engine は対象 reply を `abort = true` で終端する。
 
 この場合、対象 HEM Timeline は aborted HEM Timeline として完了する。
@@ -631,10 +688,13 @@ Host は、cancel reply body の `result = true` だけを根拠に、対象 HEM
 
 protocol channel body が Body Contract として読めない、判定できない、または必須 field を欠く場合、HEM Body Contract failure とする。
 
+protocol channel Body Contract failure は、known body branch が存在し、HEM Header validation および HEMP flow validation が成功した後に適用する。
+
+known body branch が存在しない場合、それは protocol channel Body Contract failure ではなく、HEMP payload format failure である。
+
 例:
 
 ```text
-ping post body branch が存在しない。
 ping reply body の result / message が欠落している。
 shutdown post body の reason が欠落している。
 shutdown reply body の result / message が欠落している。
@@ -664,4 +724,5 @@ failure response policy は、`09-failure-handling.md` で定義する。
 - Standard Data Body の詳細
 - failure response policy の詳細
 - Transport Binding の具体仕様
+- Engine から Host への cancel 用 protocol channel
 ```

@@ -369,9 +369,11 @@ hem_payload_length:
   serialized HemPayload bytes 全体の上限
 ```
 
-`open_threads.per_channel` は、1 channel あたり同時に open できる thread 数の上限である。
+`open_threads.per_channel` は、1つの application channel 内で同時に未closed状態にできる HEM Thread 数の上限である。
 
-`open_threads.total` は、session 全体で同時に open できる thread 数の上限である。
+`open_threads.total` は、application channel 上で HEMP session 全体として同時に未closed状態にできる HEM Thread 数の上限である。
+
+ここでいう未closed状態の HEM Thread には、open 状態および closing 状態の HEM Thread を含む。
 
 `role.<role>.hem_count` は、1つの logical send に含められる HEM 数の上限である。
 
@@ -763,11 +765,15 @@ body.limits.hem_payload_length
 serialized HemPayload bytes 全体の上限
 ```
 
-HEMP Protobuf Encoding は、Body Contract が使用する body bytes の保証容量を導出するため、次の定数を定義する。
+HEMP Protobuf Encoding は、Body Contract が使用する body bytes の保証容量を導出するため、次の reserved envelope budget を定義する。
 
 ```text
 max_core_envelope_length = 64 bytes
 ```
+
+`max_core_envelope_length` は、normalized sender が application channel の通常 body または abort body を含む `HemPayload` を生成する際に、body bytes 以外の Core Envelope bytes のために予約する budget である。
+
+`max_core_envelope_length` は、受信した任意の `HemPayload` の Core Envelope bytes が 64 bytes 以下でなければならない、という validation rule ではない。
 
 Body Contract が使用する body bytes の保証容量は次である。
 
@@ -785,8 +791,9 @@ hem_body_capacity
 max(0, body.limits.hem_payload_length - 64)
 ```
 
-`hem_body_capacity` は Body Contract 向けの導出容量である。  
-Core 共通の `application_body` bytes 強制上限ではない。
+`hem_body_capacity` は Body Contract 向けの導出容量である。
+
+`hem_body_capacity` は、Core 共通の `application_body` bytes 強制上限ではない。
 
 Core が直接検証する基本上限は、実際の受信 HEM Payload bytes の length、すなわち serialized `hemp.v1.HemPayload` bytes 全体の length である。
 
@@ -836,6 +843,8 @@ len(received HEM Payload bytes) > body.limits.hem_payload_length
 len(application_body) > standard_data_body_data_capacity
 → HEM Body Contract failure
 ```
+
+`standard_data_body_data_capacity` は、normalized sender 向けの `hem_body_capacity` に基づく Standard Data Body の Body Contract 上限である。
 
 Standard Data Body の chunking、empty data、logical send completion、または abort handling の詳細は、この文書では定義しない。
 

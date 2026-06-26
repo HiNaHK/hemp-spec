@@ -105,24 +105,29 @@ length / limit / resource limit 判定対象:
 新規生成 sender は、少なくとも次を満たさなければならない。
 
 ```text
-HemPayload.header を意味上持つ。
-known body oneof branch を意味上1つ持つ。
-Header field 8つを意味上すべて持つ。
-end / close / abort は presence を持つ。
-Header と body branch が整合する。
-unknown fields を出力しない。
-duplicate Core fields に依存しない。
-multiple oneof branch に依存しない。
-embedded message merge semantics に依存した意味を作らない。
+- HemPayload.header を意味上持つ。
+- known body oneof branch を意味上1つ持つ。
+- Header field 8つを意味上すべて持つ。
+- end / close / abort は presence を持つ。
+- Header と body branch が整合する。
+- unknown fields を出力しない。
+- duplicate known fields を出力しない。
+- HemPayload.header を複数回出力しない。
+- HemPayload.body の known oneof branch を複数個出力しない。
+- HemHeader の各 known field を複数回出力しない。
+- Core-defined protocol body message 内の known singular field を複数回出力しない。
+- embedded message merge semantics に依存した意味を作らない。
 ```
 
 新規生成 sender は、Core Envelope に unknown fields を emit してはならない。
+
+新規生成 sender は、Core Envelope に duplicate known fields を emit してはならない。
 
 正規化は、deterministic serialization を要求しない。
 
 正規化は、canonical protobuf byte sequence を要求しない。
 
-HEMP Protobuf Encoding が要求するのは、byte-level canonicalization ではなく、HEMP semantics 上の Core Envelope が正しく表現されていることである。
+HEMP Protobuf Encoding が要求するのは、byte-level canonicalization ではなく、HEMP semantics 上の Core Envelope が正しく、かつ capacity model の前提を満たす形で表現されていることである。
 
 Receiver は、standard Protobuf decode semantics に従い、decode 後の semantic `HemPayload` を validate する。
 
@@ -192,8 +197,13 @@ HEM Length Header を 4 bytes 読めない。
 HEM Length Header value が 0 である。
 宣言された HEM Payload length 分の bytes を読めない。
 Agreement 成立前に HEM Length Header value が protocol_channel_payload_length_limit を超えている。
-frame read limit または transport-level frame resource limit により Payload bytes を安全に読み取れない。
 ```
+
+Transport Binding Profile が定義する peer-visible な Transport Binding / Profile level の limit に違反する場合、その condition は該当 Transport Binding Profile の規則に従う。
+
+実装固有の private resource limit は、interoperability 上の HEMP framing rule または transport message payload max ではない。
+
+実装が仕様上要求される peer-visible limit を扱えない場合、その実装は該当仕様または該当 concrete Transport Binding の要件を満たさない。
 
 HEMP framing failure が発生した場合、Receiver は HEM Payload bytes を有効な `hemp.v1.HemPayload` として扱わない。
 
@@ -390,8 +400,9 @@ fallback decoding
 mixed encoding session
 ```
 
-将来、HEMP に別の Payload encoding を追加する場合、その encoding はこの仕様の範囲外である。  
-別仕様、別 session profile、別 Transport Binding profile、または HEMP protocol major revision として定義する必要がある。
+将来、HEMP に別の Payload encoding を追加する場合、その encoding はこの仕様の範囲外であり、別仕様または HEMP protocol major revision として扱う。
+
+Transport Binding Profile は、HEM Payload bytes の interpretation、Protobuf schema、body oneof branch mapping、または Payload encoding negotiation を定義しない。
 
 Protocol Channel Table / Application Channel Table の digest 用 canonical byte sequence は、Protobuf `HemPayload` の serialized bytes とは別に定義する。
 
@@ -440,12 +451,18 @@ semantic validation rules tied to fields
 
 body oneof branch mapping を同一 schema major 内で互換性を壊す形で変更してはならない。
 
+この仕様の v1.0.0 では、`package hemp.v1` に新しい body oneof branch を追加することを互換拡張として定義しない。
+
+新しい body oneof branch が必要な場合、それはこの v1.0.0 仕様の範囲外であり、別仕様または新しい schema major package として扱う。
+
 protocol channel identifier を同一 schema major 内で互換性を壊す形で変更してはならない。
 
 `package hemp.v1` 内の既存 field は、原則として削除しない。  
 使用を停止したい field は、可能であれば削除せず `deprecated = true` を付けて残す。
 
-field removal が wire compatibility または semantic compatibility に影響する場合は、HEMP protocol version または schema major package の変更を必要とする。
+field removal が wire compatibility または semantic compatibility に影響する場合は、新しい schema major package を必要とする。
+
+AgreementVersion.protocol の値を変更するだけでは、`package hemp.v1` 内の schema-incompatible change を正当化しない。
 
 新しい schema major package は、別 package name として定義する。
 
