@@ -420,6 +420,8 @@ Transport Binding Profile の選択または切り替えは、HEM Payload encodi
 
 Transport Binding Profile は、HEM Payload bytes の interpretation、Protobuf schema、body oneof branch mapping、または Payload encoding negotiation を定義しない。
 
+Concrete Transport Binding または Transport Binding Profile は、alternate HEM Payload encoding を定義してはならない。
+
 ## 18. Relationship to Local Process IPC Binding
 
 Local Process IPC Binding は、将来の concrete Transport Binding として定義され得る候補である。
