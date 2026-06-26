@@ -13,9 +13,9 @@ transport model は、HEMP Core が定義する HEM frame を、具体的な tra
 この文書では、次を定義する。
 
 ```text
-real communication direction
-relationship between direction field and real communication direction
-ordering unit
+HEM delivery path
+relationship between direction field and HEM delivery path
+ordered delivery unit
 HEM frame mapping
 HEM frame sequence
 Transport Binding instance
@@ -29,10 +29,10 @@ relationship between Transport Binding instance and HEMP session
 Transport Binding は、HEM frame を transport 上で送受信するために、少なくとも次を定義しなければならない。
 
 ```text
-Host -> Engine 方向の送信経路
-Engine -> Host 方向の送信経路
-各方向における順序保証単位
-HEM frame をどの順序保証単位に載せるか
+Host -> Engine HEM delivery path
+Engine -> Host HEM delivery path
+各 HEM delivery path における ordered delivery unit
+HEM frame をどの ordered delivery unit に載せるか
 Transport Binding instance の範囲
 HEMP session との対応関係
 ```
@@ -43,81 +43,83 @@ Transport Binding は、HEMP Core が定義する `direction`、`channel`、`thr
 
 Transport Binding は、これらの Core semantics を、実際の transport 上の送受信モデルへ写像する。
 
-## 3. Real Communication Direction
+## 3. HEM Delivery Path
 
-Transport Binding は、次の2つの実通信方向を区別しなければならない。
+HEM delivery path は、Transport Binding instance 内で、HEM frame sequence を一方向に配送するための抽象的な delivery path である。
+
+Transport Binding は、少なくとも次の2つの HEM delivery path を区別しなければならない。
 
 ```text
-Host -> Engine
-Engine -> Host
+Host -> Engine HEM delivery path
+Engine -> Host HEM delivery path
 ```
 
-`Host -> Engine` は、Host から Engine へ HEM frame を送る実通信方向である。
+`Host -> Engine HEM delivery path` は、Host から Engine へ HEM frame sequence を配送する HEM delivery path である。
 
-`Engine -> Host` は、Engine から Host へ HEM frame を送る実通信方向である。
+`Engine -> Host HEM delivery path` は、Engine から Host へ HEM frame sequence を配送する HEM delivery path である。
 
-実通信方向は、transport 上で実際に HEM frame が流れる方向である。
+HEM delivery path は、特定の process、pipe、socket、endpoint、file descriptor、message queue、transport library object、または runtime object と同義ではない。
 
-実通信方向は、具体的な transport の形に依存しない。
+それらは concrete Transport Binding または実装が HEM delivery path を実現するために使用してよい transport-specific resource である。
 
-たとえば、concrete Transport Binding は、2つの単方向 transport、1つの双方向 transport、または transport-specific な channel / stream / message abstraction によって、これら2方向を提供してよい。
+たとえば、concrete Transport Binding は、2つの単方向 transport、1つの双方向 transport、または transport-specific な channel / stream / message abstraction によって、これら2つの HEM delivery path を提供してよい。
 
-ただし、どの実現方式であっても、Transport Binding は HEM frame が Host -> Engine と Engine -> Host のどちらの実通信方向で受信されたかを判定できなければならない。
+ただし、どの実現方式であっても、Transport Binding は HEM frame が Host -> Engine HEM delivery path と Engine -> Host HEM delivery path のどちらで受信されたかを判定できなければならない。
 
-## 4. Direction Field and Real Communication Direction
+## 4. Direction Field and HEM Delivery Path
 
 HEM Header の `direction` field は、HEMP Core 上の論理送信方向を表す。
 
-Transport Binding は、`direction` field と実通信方向を一致させなければならない。
+Transport Binding は、`direction` field と HEM delivery path を一致させなければならない。
 
 対応関係は次の通りである。
 
 ```text
 direction = to_engine:
-  HEM frame は Host -> Engine 方向で送信されなければならない。
+  HEM frame は Host -> Engine HEM delivery path で送信されなければならない。
 
 direction = to_host:
-  HEM frame は Engine -> Host 方向で送信されなければならない。
+  HEM frame は Engine -> Host HEM delivery path で送信されなければならない。
 ```
 
-受信側は、HEM frame がどの実通信方向で受信されたかを、Transport Binding から判定できなければならない。
+受信側は、HEM frame がどの HEM delivery path で受信されたかを、Transport Binding から判定できなければならない。
 
-受信側は、実通信方向と HEM Header の `direction` field が一致しない HEM を、有効な HEM として扱ってはならない。
+受信側は、HEM delivery path と HEM Header の `direction` field が一致しない HEM を、有効な HEM として扱ってはならない。
 
-実通信方向と HEM Header の `direction` field が一致しない場合、receiver は HEMP header validation failure として扱わなければならない。
+HEM delivery path と HEM Header の `direction` field が一致しない場合、receiver は HEMP header validation failure として扱わなければならない。
 
-Transport Binding は、実通信方向と `direction` field の不一致を、transport-specific な別意味として解釈してはならない。
+Transport Binding は、HEM delivery path と `direction` field の不一致を、transport-specific な別意味として解釈してはならない。
 
 Transport Binding は、不一致を自動補正してはならない。
 
 Transport Binding は、不一致を反対方向への routing instruction として扱ってはならない。
 
-## 5. Ordering Unit
+## 5. Ordered Delivery Unit
 
-ordering unit は、HEM frame sequence の順序が保持される transport 上の単位である。
+ordered delivery unit は、HEM delivery path 上で、HEM frame sequence の配送順序が保持される単位である。
 
-Transport Binding は、各実通信方向について、HEM frame sequence を運ぶ ordering unit を定義しなければならない。
+Transport Binding は、各 HEM delivery path について、HEM frame sequence を運ぶ ordered delivery unit を定義しなければならない。
 
-ordering unit 内では、送信された HEM frame sequence が送信順と同じ順序で受信されなければならない。
+ordered delivery unit 内では、送信された HEM frame sequence が送信順と同じ順序で受信されなければならない。
 
-Transport Binding は、少なくとも次を満たす ordering unit を提供しなければならない。
+Transport Binding は、少なくとも次を満たす ordered delivery unit を提供しなければならない。
 
 ```text
-Host -> Engine 方向の HEM frame sequence を運ぶ ordering unit
-Engine -> Host 方向の HEM frame sequence を運ぶ ordering unit
+Host -> Engine HEM delivery path の HEM frame sequence を運ぶ ordered delivery unit
+Engine -> Host HEM delivery path の HEM frame sequence を運ぶ ordered delivery unit
 ```
 
-1つの双方向 transport を使用する場合でも、Transport Binding は Host -> Engine と Engine -> Host の各方向を、それぞれ順序保証可能な送受信方向として扱わなければならない。
+1つの双方向 transport を使用する場合でも、Transport Binding は Host -> Engine HEM delivery path と Engine -> Host HEM delivery path のそれぞれを、順序保証可能な HEM delivery path として扱わなければならない。
 
-2つの単方向 transport を使用する場合、それぞれの単方向 transport が対応する実通信方向の ordering unit になってよい。
+2つの単方向 transport を使用する場合、それぞれの単方向 transport が対応する HEM delivery path の ordered delivery unit になってよい。
 
-transport-specific な channel、stream、queue、message sequence などを使用する場合、それが ordering unit としてどの範囲の順序を保証するかを concrete Transport Binding が定義しなければならない。
+transport-specific な channel、stream、queue、message sequence などを使用する場合、それが ordered delivery unit としてどの範囲の順序を保証するかを concrete Transport Binding が定義しなければならない。
 
-## 6. Ordering Unit and `seq`
+## 6. Ordered Delivery Unit and `seq`
 
-ordering unit による順序保証と、HEMP Core の `seq` は同じものではない。
+ordered delivery unit による順序保証と、HEMP Core の `seq` は同じものではない。
 
-ordering unit は、transport 上で HEM frame sequence の到達順序を保持するための単位である。
+ordered delivery unit は、transport 上で HEM frame sequence の到達順序を保持するための単位である。
 
 `seq` は、HEMP Core 上で、同一 logical send 内の HEM の順序を検証するための Header field である。
 
@@ -125,41 +127,41 @@ ordering unit は、transport 上で HEM frame sequence の到達順序を保持
 
 Transport Binding は、下位 transport によって順序が崩れた HEM frame sequence を、`seq` によって修復するものとして定義してはならない。
 
-Transport Binding は、ordering unit が必要な順序保証を提供できない場合、その transport を有効な Transport Binding として扱ってはならない。
+Transport Binding は、ordered delivery unit が必要な順序保証を提供できない場合、その transport を有効な Transport Binding として扱ってはならない。
 
-Transport Binding は、HEMP Core の `seq` を、異なる ordering unit 間の並べ替え、順序修復、または missing HEM の補完に使用してはならない。
+Transport Binding は、HEMP Core の `seq` を、異なる ordered delivery unit 間の並べ替え、順序修復、または missing HEM の補完に使用してはならない。
 
 ## 7. HEM Frame Mapping
 
-Transport Binding は、HEM frame を transport 上の ordering unit に mapping しなければならない。
+Transport Binding は、HEM frame を ordered delivery unit に mapping しなければならない。
 
 HEM frame mapping は、少なくとも次を定義する。
 
 ```text
-direction = to_engine の HEM frame を載せる ordering unit
-direction = to_host の HEM frame を載せる ordering unit
-ordering unit 上で HEM frame sequence をどう扱うか
+direction = to_engine の HEM frame を載せる ordered delivery unit
+direction = to_host の HEM frame を載せる ordered delivery unit
+ordered delivery unit 上で HEM frame sequence をどう扱うか
 ```
 
-`direction = to_engine` の HEM frame は、Host -> Engine 方向の ordering unit 上で送信されなければならない。
+`direction = to_engine` の HEM frame は、Host -> Engine HEM delivery path に属する ordered delivery unit 上で送信されなければならない。
 
-`direction = to_host` の HEM frame は、Engine -> Host 方向の ordering unit 上で送信されなければならない。
+`direction = to_host` の HEM frame は、Engine -> Host HEM delivery path に属する ordered delivery unit 上で送信されなければならない。
 
-Transport Binding は、1つの HEM frame を、複数の実通信方向に同時に属するものとして扱ってはならない。
+Transport Binding は、1つの HEM frame を、複数の HEM delivery path に同時に属するものとして扱ってはならない。
 
 Transport Binding は、1つの HEM frame を、Core semantics 上の別の HEM frame に分割してはならない。
 
 Transport Binding は、複数の HEM frame を、Core semantics 上の1つの HEM frame に結合してはならない。
 
-同一の論理 post 送信、論理 reply 送信、または論理 notice 送信に属する HEM frame は、単一の ordering unit に mapping しなければならない。
+同一の論理 post 送信、論理 reply 送信、または論理 notice 送信に属する HEM frame は、単一の ordered delivery unit に mapping しなければならない。
 
-Transport Binding は、同一 logical send に属する HEM frame を複数の ordering unit へ分散してはならない。
+Transport Binding は、同一 logical send に属する HEM frame を複数の ordered delivery unit へ分散してはならない。
 
-1つの ordering unit は、複数の channel、複数の thread、複数の role、または複数の logical send に属する HEM frame を運んでよい。
+1つの ordered delivery unit は、複数の channel、複数の thread、複数の role、または複数の logical send に属する HEM frame を運んでよい。
 
 ただし、その interleave は、適用される Transport Binding Profile が許す complete HEM frame 単位に限る。
 
-Transport Binding は、HEMP Core の `seq` を、異なる ordering unit 間の並べ替え、順序修復、または missing HEM の補完に使用してはならない。
+Transport Binding は、HEMP Core の `seq` を、異なる ordered delivery unit 間の並べ替え、順序修復、または missing HEM の補完に使用してはならない。
 
 transport profile によっては、1つの HEM frame が transport 上の複数 read / write / buffer operation にまたがることがある。
 
@@ -169,9 +171,9 @@ byte-level framing、frame boundary handling、および profile-specific な HE
 
 ## 8. HEM Frame Sequence
 
-HEM frame sequence は、ordering unit 上で送受信される HEM frame の列である。
+HEM frame sequence は、ordered delivery unit 上で送受信される HEM frame の列である。
 
-Transport Binding は、各 ordering unit 上の HEM frame sequence を、その ordering unit の順序保証に従って扱わなければならない。
+Transport Binding は、各 ordered delivery unit 上の HEM frame sequence を、その ordered delivery unit の順序保証に従って扱わなければならない。
 
 HEM frame sequence は、HEMP Core の logical send sequence と同一ではない。
 
@@ -192,9 +194,9 @@ Transport Binding instance は、HEMP session に対して、HEM frame を送受
 Transport Binding instance は、少なくとも次を含む。
 
 ```text
-Host -> Engine 方向の送信能力
-Engine -> Host 方向の送信能力
-各方向の ordering unit
+Host -> Engine HEM delivery path
+Engine -> Host HEM delivery path
+各 HEM delivery path の ordered delivery unit
 HEM frame mapping rules
 適用される Transport Binding Profile
 concrete Transport Binding が定義する transport-specific context
@@ -250,7 +252,7 @@ specific thread model
 
 Concrete Transport Binding は、この文書が定義する transport model を、具体的な transport へ写像する。
 
-Concrete Transport Binding は、使用する transport-specific resource が、必要な実通信方向、ordering unit、HEM frame mapping、および HEM frame sequence delivery をどのように満たすかを定義しなければならない。
+Concrete Transport Binding は、使用する transport-specific resource が、必要な HEM delivery path、ordered delivery unit、HEM frame mapping、および HEM frame sequence delivery をどのように満たすかを定義しなければならない。
 
 ## 12. Relationship to Later Documents
 
