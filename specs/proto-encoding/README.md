@@ -11,5 +11,5 @@ schema は、必要に応じて参照する。
 - `02-framing-and-payload-encoding.md`: HEM framing と HEM Payload の Protobuf encoding。
 - `03-message-model-and-body-mapping.md`: HemPayload / HemHeader / body mapping。
 - `04-protocol-bodies-limits-and-capacity.md`: protocol bodies / limits / capacity。
-- `05-validation-compatibility-and-evolution.md`: validation / compatibility / schema evolution policy for v1.0.0.
+- `05-validation-compatibility-and-evolution.md`: validation / compatibility / v1.0.0 の schema evolution 方針。
 - `schema/hemp.proto`: HEMP Protobuf schema。
