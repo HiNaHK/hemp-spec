@@ -240,7 +240,7 @@ message ChannelDigest {
 正規表現は次で定義する。
 
 ```text
-^[a-z][a-z0-9]*(?:_[a-z][a-z0-9]*)*$
+^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$
 ```
 
 `ChannelDigest.name` に使用できる文字は次だけである。
