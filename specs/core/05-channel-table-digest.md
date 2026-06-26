@@ -616,7 +616,7 @@ digest
 有効形式は次である。
 
 ```regex
-^[a-z][a-z0-9]*(?:_[a-z][a-z0-9]*)*$
+^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$
 ```
 
 比較は case-sensitive exact match とする。
