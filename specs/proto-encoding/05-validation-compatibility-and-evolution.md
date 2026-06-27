@@ -254,7 +254,7 @@ abort の presence がない。
 end = false && close = true
 role = ROLE_NOTICE && close = true
 abort = true && end = false
-direction が Transport Binding 上の実通信方向と一致しない。
+direction が Transport Binding 上の HEM delivery path と一致しない。
 ```
 
 `direction` と `role` の Protobuf default value は、HEMP Header validation 上 invalid である。
