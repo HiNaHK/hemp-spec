@@ -112,7 +112,7 @@ HEMP header validation failure は、HEM Payload の基本形は有効だが、H
 - end の semantic presence がない。
 - close の semantic presence がない。
 - abort の semantic presence がない。
-- direction が Transport Binding 上の実通信方向と一致しない。
+- direction が Transport Binding 上の HEM delivery path と一致しない。
 - end = false かつ close = true である。
 - abort = true かつ end = false である。
 - notice で close = true である。
