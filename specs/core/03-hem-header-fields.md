@@ -115,9 +115,9 @@ to_host:
   Engine から Host へ送る HEM。
 ```
 
-`direction` は、HEMP を使う Transport Binding が定義する実通信方向と一致しなければならない。
+`direction` は、HEMP を使う Transport Binding が定義する HEM delivery path と一致しなければならない。
 
-`direction` が実通信方向と一致しない HEM を受信した場合、HEMP header validation failure とする。
+`direction` が HEM delivery path と一致しない HEM を受信した場合、HEMP header validation failure とする。
 
 HEMP Core は、特定の transport 方式を要求しない。
 
