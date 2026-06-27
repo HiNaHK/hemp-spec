@@ -168,10 +168,10 @@ enum Direction {
 ```text
 direction = DIRECTION_UNSPECIFIED
 direction が未定義 enum value である。
-direction が Transport Binding 上の実通信方向と一致しない。
+direction が Transport Binding 上の HEM delivery path と一致しない。
 ```
 
-この文書は、Transport Binding 上の実通信方向をどのように確立するかを定義しない。
+この文書は、Transport Binding 上の HEM delivery path をどのように確立するかを定義しない。
 
 ### 5.2 `role`
 
