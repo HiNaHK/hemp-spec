@@ -201,7 +201,7 @@ Agreement 成立前に HEM Length Header value が protocol_channel_payload_leng
 
 Transport Binding Profile が定義する peer-visible な Transport Binding / Profile level の limit に違反する場合、その condition は該当 Transport Binding Profile の規則に従う。
 
-実装固有の private resource limit は、interoperability 上の HEMP framing rule または transport message payload max ではない。
+実装が内部的な資源管理のために設ける制限値は、interoperability 上の HEMP framing rule または transport message payload max ではない。
 
 実装が仕様上要求される peer-visible limit を扱えない場合、その実装は該当仕様または該当 concrete Transport Binding の要件を満たさない。
 
