@@ -191,7 +191,7 @@ package hemp.v1;
 `schema/hemp.proto` は、HEM Length Header を表現しない。  
 HEM Length Header は HEM frame の framing 要素であり、Protobuf message structure ではない。
 
-`schema/hemp.proto` は、Transport Binding、実通信方向の確立方法、I/O API、生成コード API、または特定言語の runtime behavior を定義しない。
+`schema/hemp.proto` は、Transport Binding、HEM delivery path の確立方法、I/O API、生成コード API、または特定言語の runtime behavior を定義しない。
 
 ---
 
