@@ -18,7 +18,7 @@ Transport Binding は、HEMP Core semantics を再定義しない。
 
 Transport Binding は、HEMP protocol specification の一部である。
 
-Transport Binding は、単なる実装都合、補助文書、または optional addon ではない。
+Transport Binding は、単なる実装都合、補助文書、または任意追加の別要素ではない。
 
 HEMP を実際に送受信するには、HEM frame を具体的な transport 上で運ぶ必要がある。Transport Binding は、そのために必要な HEM delivery path、ordered delivery unit、HEM frame delivery、Transport Binding Profile、および concrete Transport Binding definitions を定義する。
 
@@ -58,7 +58,7 @@ Transport Binding は、HEMP Core semantics を緩和してはならない。
 
 Transport Binding は、HEMP Core semantics を拡張して別の意味にしてはならない。
 
-Transport Binding は、HEMP Core semantics と矛盾する transport-specific rule を定義してはならない。
+Transport Binding は、HEMP Core semantics と矛盾する transport 固有の規則を定義してはならない。
 
 ## 4. What Transport Binding Defines
 
@@ -123,7 +123,7 @@ Transport Binding は、HEM frame を complete HEM frame として HEMP Core の
 
 HEM frame boundary は、適用される Transport Binding Profile に従って扱わなければならない。
 
-Transport Binding は、transport read / write / buffer operation を、そのまま HEM frame boundary とみなしてはならない。
+Transport Binding は、transport の read / write / buffer operation を、そのまま HEM frame boundary とみなしてはならない。
 
 次を、それ自体として HEM frame boundary とみなしてはならない。
 
@@ -153,7 +153,7 @@ transport failure によって現在の HEMP session を継続できない場合
 
 transport failure 後に同じ HEMP session を再開してはならない。
 
-再度 HEMP communication を行う場合は、新しい HEMP session として agreement から開始する。
+再度 HEMP 通信を行う場合は、新しい HEMP session として agreement から開始する。
 
 詳細な frame handling、transport requirements、transport failure、および `abort` との境界は、`03-transport-requirements-and-frame-handling.md` で定義する。
 
