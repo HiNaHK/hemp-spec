@@ -6,9 +6,9 @@ Scope: HEMP Transport Binding specification
 
 ## 1. Purpose
 
-この文書は、HEMP Transport Binding における transport model を定義する。
+この文書は、HEMP Transport Binding における transport モデルを定義する。
 
-transport model は、HEMP Core が定義する HEM frame を、具体的な transport 上で送受信するための共通モデルである。
+transport モデルは、HEMP Core が定義する HEM frame を、具体的な transport 上で送受信するための共通モデルである。
 
 この文書では、次を定義する。
 
@@ -60,7 +60,7 @@ Engine -> Host HEM delivery path
 
 HEM delivery path は、特定の process、pipe、socket、endpoint、file descriptor、message queue、transport library object、または runtime object と同義ではない。
 
-それらは concrete Transport Binding または実装が HEM delivery path を実現するために使用してよい transport-specific resource である。
+それらは concrete Transport Binding または実装が HEM delivery path を実現するために使用してよい transport-specific な resource である。
 
 たとえば、concrete Transport Binding は、2つの単方向 transport、1つの双方向 transport、または transport-specific な channel / stream / message abstraction によって、これら2つの HEM delivery path を提供してよい。
 
@@ -86,13 +86,13 @@ direction = to_host:
 
 受信側は、HEM delivery path と HEM Header の `direction` field が一致しない HEM を、有効な HEM として扱ってはならない。
 
-HEM delivery path と HEM Header の `direction` field が一致しない場合、receiver は HEMP header validation failure として扱わなければならない。
+HEM delivery path と HEM Header の `direction` field が一致しない場合、受信側は HEMP header validation failure として扱わなければならない。
 
 Transport Binding は、HEM delivery path と `direction` field の不一致を、transport-specific な別意味として解釈してはならない。
 
 Transport Binding は、不一致を自動補正してはならない。
 
-Transport Binding は、不一致を反対方向への routing instruction として扱ってはならない。
+Transport Binding は、不一致を反対方向への配送指示として扱ってはならない。
 
 ## 5. Ordered Delivery Unit
 
@@ -129,7 +129,7 @@ Transport Binding は、下位 transport によって順序が崩れた HEM fram
 
 Transport Binding は、ordered delivery unit が必要な順序保証を提供できない場合、その transport を有効な Transport Binding として扱ってはならない。
 
-Transport Binding は、HEMP Core の `seq` を、異なる ordered delivery unit 間の並べ替え、順序修復、または missing HEM の補完に使用してはならない。
+Transport Binding は、HEMP Core の `seq` を、異なる ordered delivery unit 間の並べ替え、順序修復、または欠落した HEM の補完に使用してはならない。
 
 ## 7. HEM Frame Mapping
 
@@ -161,9 +161,9 @@ Transport Binding は、同一 logical send に属する HEM frame を複数の 
 
 ただし、その interleave は、適用される Transport Binding Profile が許す complete HEM frame 単位に限る。
 
-Transport Binding は、HEMP Core の `seq` を、異なる ordered delivery unit 間の並べ替え、順序修復、または missing HEM の補完に使用してはならない。
+Transport Binding は、HEMP Core の `seq` を、異なる ordered delivery unit 間の並べ替え、順序修復、または欠落した HEM の補完に使用してはならない。
 
-transport profile によっては、1つの HEM frame が transport 上の複数 read / write / buffer operation にまたがることがある。
+transport profile によっては、1つの HEM frame が transport 上の複数の read / write / buffer operation にまたがることがある。
 
 その場合でも、Transport Binding は、HEMP Core の処理へ渡す前に complete HEM frame として扱えるようにしなければならない。
 
@@ -204,7 +204,7 @@ concrete Transport Binding が定義する transport-specific context
 
 Transport Binding instance は、特定の process、pipe、socket、endpoint、file descriptor、message queue、transport library object、または runtime object と同義ではない。
 
-それらは concrete Transport Binding または実装が Transport Binding instance を実現するために使用してよい transport-specific resource である。
+それらは concrete Transport Binding または実装が Transport Binding instance を実現するために使用してよい transport-specific な resource である。
 
 Transport Binding instance の意味上の単位は、HEMP session を成立させるために必要な HEM frame delivery context である。
 
@@ -220,7 +220,7 @@ HEMP session は、Transport Binding instance 上で成立する。
 
 Transport Binding instance を、終了済み HEMP session の後に再利用できるかどうかは、concrete Transport Binding または実装が定義してよい。
 
-ただし、再利用後に HEMP communication を行う場合は、新しい HEMP session として agreement から開始しなければならない。
+ただし、再利用後に HEMP 通信を行う場合は、新しい HEMP session として agreement から開始しなければならない。
 
 Transport Binding instance は、HEMP session の agreement、limits、flow state、channel state、thread state を再定義しない。
 
@@ -234,7 +234,7 @@ transport failure 後の HEMP session の扱い、同じ session を再開しな
 
 ## 11. Transport-Agnostic Model
 
-この transport model は、特定の transport 実装に依存しない。
+この transport モデルは、特定の transport 実装に依存しない。
 
 この文書は、次を要求しない。
 
@@ -250,13 +250,13 @@ specific runtime
 specific thread model
 ```
 
-Concrete Transport Binding は、この文書が定義する transport model を、具体的な transport へ写像する。
+Concrete Transport Binding は、この文書が定義する transport モデルを、具体的な transport へ写像する。
 
-Concrete Transport Binding は、使用する transport-specific resource が、必要な HEM delivery path、ordered delivery unit、HEM frame mapping、および HEM frame sequence delivery をどのように満たすかを定義しなければならない。
+Concrete Transport Binding は、使用する transport-specific な resource が、必要な HEM delivery path、ordered delivery unit、HEM frame mapping、および HEM frame sequence delivery をどのように満たすかを定義しなければならない。
 
 ## 12. Relationship to Later Documents
 
-この文書は、Transport Binding の共通 transport model を定義する。
+この文書は、Transport Binding の共通 transport モデルを定義する。
 
 詳細な transport requirements、frame boundary handling、frame handling、transport failure、および `abort` と transport failure の境界は、`03-transport-requirements-and-frame-handling.md` で定義する。
 
