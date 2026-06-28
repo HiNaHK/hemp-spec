@@ -98,7 +98,7 @@ known body oneof branch absent
 
 unknown field は、known body oneof branch の代替にならない。
 
-将来の body branch が unknown field として受信された場合、現行 receiver から見ると known body oneof branch は存在しない。  
+将来の body branch が unknown field として受信された場合、現行の受信側から見ると known body oneof branch は存在しない。
 この場合は HEMP payload format failure とする。
 
 empty message branch または empty bytes branch であっても、known oneof branch として選択されていれば、body branch presence は存在する。  
@@ -140,7 +140,7 @@ message HemHeader {
 
 `direction`、`role`、`channel`、`thread`、`seq` は proto3 `optional` にしない。
 
-これらの field は、absence が Protobuf default value に写像され、その default value が HEMP Header validation 上 invalid になるように定義する。
+これらの field は、欠落時に Protobuf default value へ写像され、その default value が HEMP Header validation 上 invalid になるように定義する。
 
 `end`、`close`、`abort` は `optional bool` とする。  
 これらは `false` が意味を持つ有効値であり、欠落と `false` を区別する必要があるためである。
@@ -292,7 +292,7 @@ optional bool close = 7;
 optional bool abort = 8;
 ```
 
-これらは presence required である。
+これらは presence が必須である。
 
 次は HEMP header validation failure とする。
 
@@ -320,14 +320,14 @@ abort = false
 ```
 
 これらの `false` は有効値である。  
-したがって、receiver は field absent と default value present を区別できなければならない。
+したがって、受信側は field が欠落している場合と default value が存在する場合を区別できなければならない。
 
-HEMP Protobuf receiver は、generated API または reflection API によって、`end`、`close`、`abort` の presence を検査できなければならない。
+HEMP Protobuf 受信側は、generated API または reflection API によって、`end`、`close`、`abort` の presence を検査できなければならない。
 
-presence を検査できない Protobuf runtime または language binding は、HEMP Protobuf receiver の適合実装として使用してはならない。
+presence を検査できない Protobuf runtime または language binding は、HEMP Protobuf 受信側の適合実装として使用してはならない。
 
 `direction`、`role`、`channel`、`thread`、`seq` は optional presence によって検出しない。  
-これらは absence が Protobuf default value に写像され、その default value を Header validation failure として扱う。
+これらは欠落時に Protobuf default value へ写像され、その default value を Header validation failure として扱う。
 
 ```text
 direction absent -> DIRECTION_UNSPECIFIED -> HEMP header validation failure

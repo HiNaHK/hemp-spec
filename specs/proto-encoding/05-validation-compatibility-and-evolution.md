@@ -37,7 +37,7 @@ Scope: HEMP Protobuf Encoding specification
 
 ## 2. validation order
 
-Receiver は、受信した HEM を次の順序で検証する。
+受信側は、受信した HEM を次の順序で検証する。
 
 ```text
 1. HEM framing validation
@@ -52,10 +52,10 @@ Receiver は、受信した HEM を次の順序で検証する。
 
 後続 layer の validation は、前段の validation が成功した場合にだけ意味を持つ。
 
-たとえば、Payload bytes が `hemp.v1.HemPayload` として Protobuf decode できない場合、Receiver は `HemHeader`、body oneof branch、flow state、または Body Contract の validation を適用しない。  
+たとえば、Payload bytes が `hemp.v1.HemPayload` として Protobuf decode できない場合、受信側は `HemHeader`、body oneof branch、flow state、または Body Contract の validation を適用しない。
 この場合は HEMP payload format failure とする。
 
-Header validation failure がある場合、Receiver はその HEM を有効な flow event として扱わない。
+Header validation failure がある場合、受信側はその HEM を有効な flow event として扱わない。
 
 Header と flow が有効であり、selected body branch または body field value が対象 Body Contract に適合しない場合は、HEM Body Contract failure とする。
 
@@ -65,7 +65,7 @@ Header と flow が有効であり、selected body branch または body field v
 
 Protobuf unknown fields は、受信互換性として許容する。
 
-Receiver は、次の unknown fields を、その存在のみを理由に HEMP failure として扱ってはならない。
+受信側は、次の unknown fields を、その存在のみを理由に HEMP failure として扱ってはならない。
 
 ```text
 HemPayload の unknown fields
@@ -80,7 +80,7 @@ unknown fields は、必須 known field の代替にならない。
 
 unknown fields は、known body oneof branch の代替にならない。
 
-将来の body branch が unknown field として受信された場合、現行 receiver から見ると known body oneof branch は存在しない。  
+将来の body branch が unknown field として受信された場合、現行の受信側から見ると known body oneof branch は存在しない。
 この場合は HEMP payload format failure とする。
 
 unknown fields は、受信した HEM Payload bytes の一部である。  
@@ -98,11 +98,11 @@ length / limit / resource limit 判定対象:
 
 ## 4. Core Envelope normalization
 
-新規生成 sender は、正規化された Core Envelope を生成しなければならない。
+Core Envelope を新規生成する送信側は、正規化された Core Envelope を生成しなければならない。
 
 ここでいう Core Envelope は、`HemPayload`、`HemHeader`、Core-defined body branch、および Core-defined protocol body message structure を指す。
 
-新規生成 sender は、少なくとも次を満たさなければならない。
+Core Envelope を新規生成する送信側は、少なくとも次を満たさなければならない。
 
 ```text
 - HemPayload.header を意味上持つ。
@@ -119,9 +119,9 @@ length / limit / resource limit 判定対象:
 - embedded message merge semantics に依存した意味を作らない。
 ```
 
-新規生成 sender は、Core Envelope に unknown fields を emit してはならない。
+Core Envelope を新規生成する送信側は、Core Envelope に unknown fields を出力してはならない。
 
-新規生成 sender は、Core Envelope に duplicate known fields を emit してはならない。
+Core Envelope を新規生成する送信側は、Core Envelope に duplicate known fields を出力してはならない。
 
 正規化は、deterministic serialization を要求しない。
 
@@ -129,7 +129,7 @@ length / limit / resource limit 判定対象:
 
 HEMP Protobuf Encoding が要求するのは、byte-level canonicalization ではなく、HEMP semantics 上の Core Envelope が正しく、かつ capacity model の前提を満たす形で表現されていることである。
 
-Receiver は、standard Protobuf decode semantics に従い、decode 後の semantic `HemPayload` を validate する。
+受信側は、standard Protobuf decode semantics に従い、decode 後の semantic `HemPayload` を validate する。
 
 ---
 
@@ -137,7 +137,7 @@ Receiver は、standard Protobuf decode semantics に従い、decode 後の sema
 
 受信した `HemPayload` を parse し、同じまたは別の `HemPayload` として reserialize して送信する場合、その送信は Core Envelope の新規生成とみなす。
 
-この場合、sender は unknown fields を継承してはならない。
+この場合、送信側は unknown fields を継承してはならない。
 
 ```text
 parse-reserialize:
@@ -182,7 +182,7 @@ HEMP Protobuf Encoding は、次の 5 classification を使用する。
 Protobuf decode failure は新しい failure classification ではない。  
 Protobuf decode failure は、HEMP payload format failure の具体例である。
 
-validation order において複数の failure が見える場合、Receiver は先に該当した validation layer の failure classification を採用する。
+validation order において複数の failure が見える場合、受信側は先に該当した validation layer の failure classification を採用する。
 
 ---
 
@@ -201,11 +201,11 @@ Agreement 成立前に HEM Length Header value が protocol_channel_payload_leng
 
 Transport Binding Profile が定義する peer-visible な Transport Binding / Profile level の limit に違反する場合、その condition は該当 Transport Binding Profile の規則に従う。
 
-実装が内部的な資源管理のために設ける制限値は、interoperability 上の HEMP framing rule または transport message payload max ではない。
+実装が内部的な資源管理のために設ける制限値は、相互運用上の HEMP framing rule または transport message payload max ではない。
 
 実装が仕様上要求される peer-visible limit を扱えない場合、その実装は該当仕様または該当 concrete Transport Binding の要件を満たさない。
 
-HEMP framing failure が発生した場合、Receiver は HEM Payload bytes を有効な `hemp.v1.HemPayload` として扱わない。
+HEMP framing failure が発生した場合、受信側は HEM Payload bytes を有効な `hemp.v1.HemPayload` として扱わない。
 
 HEMP framing failure は、Protobuf decode failure ではない。
 
@@ -261,7 +261,7 @@ direction が Transport Binding 上の HEM delivery path と一致しない。
 
 `channel`、`thread`、`seq` の Protobuf default value である `0` も、HEMP Header validation 上 invalid である。
 
-`end`、`close`、`abort` は `optional bool` であり、presence required である。  
+`end`、`close`、`abort` は `optional bool` であり、presence が必須である。
 `false` は有効値であるため、欠落と `false` は区別しなければならない。
 
 ---
