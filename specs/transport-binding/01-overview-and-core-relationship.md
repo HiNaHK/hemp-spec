@@ -147,7 +147,7 @@ Transport Binding は、1つの HEM frame の内部に、別の HEM frame また
 
 transport failure、stream close、pipe close、EOF、process termination、I/O error、timeout、または transport reset を、`abort = true` の HEM の代替として扱ってはならない。
 
-Transport Binding は、transport failure を理由に、未完了の logical send を HEMP Core 上の aborted completion として扱ってはならない。
+Transport Binding は、transport failure を理由に、未完了の logical send を HEMP Core 上で aborted 状態で完了したものとして扱ってはならない。
 
 transport failure によって現在の HEMP session を継続できない場合、その HEMP session は継続不能として扱う。
 

@@ -325,7 +325,7 @@ transport failure が発生した場合の session continuation は、failure cl
 
 ## 15. `abort = true` and Transport Failure Boundary
 
-`abort = true` は、HEMP Core 上の logical send を sender-side aborted termination として終端するための Header field である。
+`abort = true` は、HEMP Core 上の logical send を送信側から aborted 状態で終端するための Header field である。
 
 `abort = true` の HEM も、通常の complete HEM frame として transport 上で運ばれなければならない。
 
@@ -350,7 +350,7 @@ Transport Binding は、transport close、stream close、pipe close、endpoint c
 
 この場合、未完了の logical send を aborted 状態で完了したものとして扱ってはならない。
 
-Transport Binding は、transport failure を理由に、logical send が HEMP Core 上 aborted termination したものとして補正してはならない。
+Transport Binding は、transport failure を理由に、logical send が HEMP Core 上で aborted 状態で終端したものとして補正してはならない。
 
 `abort = true` の HEM が complete HEM frame として受信され、その Header、flow、および Body Contract が有効である場合に限り、その HEM は HEMP Core 上の abort として扱われる。
 
