@@ -368,7 +368,7 @@ failure response は、failure 分類と、その時点で reply 可能な Body 
 - HEMP flow violation
 ```
 
-これらの failure が発生した HEM は、HEM Timeline 上の有効な post として state commit しない。
+これらの failure が発生した HEM は、HEM Timeline 上の有効な post として確定しない。
 
 したがって、これらの failure に対して対応 reply を生成しない。
 
@@ -390,23 +390,23 @@ HEM Body Contract failure は、HEM Payload structural validation、HEM Header v
 
 Header validation または flow validation が失敗している HEM については、Body Contract validation を適用しない。
 
-Header validation および flow validation が成功した post について、Body Contract validation が失敗した場合でも、対応 reply を返す Body Contract が定義されている場合、その post は HEM Timeline 上の post として state commit する。
+Header validation および flow validation が成功した post について、Body Contract validation が失敗した場合でも、対応 reply を返す Body Contract が定義されている場合、その post は HEM Timeline 上の post として状態に反映する。
 
-この state commit は、対応 reply を HEMP flow semantics 上の reply として成立させるために行う。
+この状態への反映は、対応 reply を HEMP flow semantics 上の reply として成立させるために行う。
 
 この場合の reply は、汎用 error reply ではなく、該当 channel の Body Contract が定義する通常の reply bodyである。
 
 reply 完了後の HEM Thread state は、通常の `end` / `close` / `abort` 規則に従う。
 
-framing failure、payload format failure、header validation failure、または flow violation が発生した HEM は、HEM Timeline 上の有効な post として state commit しない。
+framing failure、payload format failure、header validation failure、または flow violation が発生した HEM は、HEM Timeline 上の有効な post として確定しない。
 
-この state commit 規則は、post に対して適用する。
+この状態反映規則は、post に対して適用する。
 
-この文書では、notice または reply の Body Contract failure に対して、対応 reply を返すための state commit 規則を定義しない。
+この文書では、notice または reply の Body Contract failure に対して、対応 reply を返すための状態反映規則を定義しない。
 
 ### 18.1 agreement
 
-`agreement` の Body Contract failure では、Header validation および flow validation が成功し、agreement reply を返せる状態であれば、receiver はその agreement post を HEM Timeline 上の post として state commit し、`agreement` reply body を使って failure を返してよい。
+`agreement` の Body Contract failure では、Header validation および flow validation が成功し、agreement reply を返せる状態であれば、receiver はその agreement post を HEM Timeline 上の post として状態に反映し、`agreement` reply body を使って failure を返してよい。
 
 この reply は、汎用 error reply ではない。
 
@@ -442,7 +442,7 @@ Agreement Body Contract failure に対して `result = false` または判定 bo
 
 `ping` / `shutdown` / `cancel` の post body が Body Contract に合わない場合、その failure は各 protocol channel の Body Contract failure とする。
 
-Header validation および flow validation が成功し、対応 reply を返せる状態であれば、receiver はその post を HEM Timeline 上の post として state commit し、各 protocol channel の専用 reply body で `result = false` を返してよい。
+Header validation および flow validation が成功し、対応 reply を返せる状態であれば、receiver はその post を HEM Timeline 上の post として状態に反映し、各 protocol channel の専用 reply body で `result = false` を返してよい。
 
 この reply は、汎用 error reply ではない。
 
