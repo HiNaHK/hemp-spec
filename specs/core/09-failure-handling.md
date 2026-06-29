@@ -88,7 +88,7 @@ unknown field は、必須既知 field の代替にはならない。
 
 unknown field の存在のみを理由に、HEMP payload format failure としてはならない。
 
-known body branch が存在しない場合、Receiver は HEM Body Contract validation を適用しない。
+known body branch が存在しない場合、受信側は HEM Body Contract validation を適用しない。
 
 この場合、その HEM は HEMP payload format failure として扱う。
 
@@ -287,7 +287,7 @@ HEMP 実装は、相手が解釈する必要のある情報を unknown field と
 
 abort body 内の diagnostic 情報を解釈できない場合でも、Header の `abort = true` によって表される aborted 終端状態は変わらない。
 
-ただし、`abort = true` を許可しない context で使用した場合は、該当する failure 分類に従う。
+ただし、`abort = true` を許可しない文脈で使用した場合は、該当する failure 分類に従う。
 
 例:
 

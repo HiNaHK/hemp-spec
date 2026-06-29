@@ -250,21 +250,21 @@ known body branch が存在しない場合は、HEM Body Contract failure では
 
 ### 9.5 reply body
 
-`PingReplyBody.result` は presence required である。
+`PingReplyBody.result` は presence が必須である。
 
-`result = true` は、receiver が ping request を受け入れ、その時点で HEMP post を受信し、HEMP reply を返せる状態であることを表す。
+`result = true` は、受信側が ping request を受け入れ、その時点で HEMP post を受信し、HEMP reply を返せる状態であることを表す。
 
 `result = false` は有効値である。
 
-`result = false` は、receiver が ping request を有効に受信し、ping reply を返したが、その ping request を肯定的な readiness confirmation としては受け入れないことを表す。
+`result = false` は、受信側が ping request を有効に受信し、ping reply を返したが、その ping request を HEMP post を受信し HEMP reply を返せる状態であることの肯定的な確認としては受け入れないことを表す。
 
 `result = false` は HEMP failure ではない。
 
 `result = false` の ping reply を受信したことだけを理由に、HEMP session が正常終了、Agreement failure、HEMP failure、または transport failure になったものとして扱ってはならない。
 
-`result = false` の ping reply を受信した後の再試行、待機、利用者向け表示、または application-level 判断は、HEMP を使う application または実装側が定義する。
+`result = false` の ping reply を受信した後の再試行、待機、利用者向け表示、またはアプリケーション側の判断は、HEMP を使う application または実装側が定義する。
 
-`PingReplyBody.message` は presence required である。
+`PingReplyBody.message` は presence が必須である。
 
 `PingReplyBody.message` は non-empty でなければならない。
 
@@ -432,7 +432,7 @@ Engine 側 application は、未完了の HEM Timeline、未完了の通常 HEM 
 
 shutdown post body が Body Contract に合わない場合の failure response policy は、`09-failure-handling.md` で定義する。
 
-Header validation および flow validation が成功している場合、receiver は `shutdown` reply body の `result = false` によって shutdown Body Contract failure を返してよい。
+Header validation および flow validation が成功している場合、受信側は `shutdown` reply body の `result = false` によって shutdown Body Contract failure を返してよい。
 
 この場合の reply は、汎用 error reply ではない。
 
@@ -588,7 +588,7 @@ target.thread が進行中の HEM Timeline を持たない。
 
 target.channel の service provider side が engine ではないことは、cancel Body Contract failure ではない。
 
-この場合、receiver は cancel reply body の `result = false` によって、対象がキャンセル可能ではないことを返す。
+この場合、受信側は cancel reply body の `result = false` によって、対象がキャンセル可能ではないことを返す。
 
 `reason` は required semantic field である。
 
@@ -632,7 +632,7 @@ target.thread が進行中の HEM Timeline を持たない。
 
 cancel post body が Body Contract に合わない場合の failure response policy は、`09-failure-handling.md` で定義する。
 
-Header validation および flow validation が成功している場合、receiver は `cancel` reply body の `result = false` によって cancel Body Contract failure を返してよい。
+Header validation および flow validation が成功している場合、受信側は `cancel` reply body の `result = false` によって cancel Body Contract failure を返してよい。
 
 この場合、cancel request は受け付けられない。
 

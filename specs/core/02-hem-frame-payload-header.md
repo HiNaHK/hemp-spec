@@ -141,7 +141,7 @@ agreement 成立後、受信側が HEM Payload bytes を読み取り、HEM Heade
 
 agreement 成立後の HEM について、受信側は agreement 済み `body.limits.hem_payload_length` だけを根拠に、その値を超える HEM Payload length を HEMP framing failure としてはならない。
 
-agreement 成立後に、Payload 読み取り前の暫定的な読み取り budget を設ける場合、その budget は少なくとも次の大きい方を許容しなければならない。
+agreement 成立後に、Payload 読み取り前の暫定的な読み取り上限を設ける場合、その上限は少なくとも次の大きい方を許容しなければならない。
 
 ```text
 agreement 済み body.limits.hem_payload_length
