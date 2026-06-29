@@ -88,7 +88,7 @@ unknown field は、必須既知 field の代替にはならない。
 
 unknown field の存在のみを理由に、HEMP payload format failure としてはならない。
 
-known body branch が存在しない場合、Receiver は HEM Body Contract validation を適用しない。
+known body branch が存在しない場合、受信側は HEM Body Contract validation を適用しない。
 
 この場合、その HEM は HEMP payload format failure として扱う。
 
@@ -287,7 +287,7 @@ HEMP 実装は、相手が解釈する必要のある情報を unknown field と
 
 abort body 内の diagnostic 情報を解釈できない場合でも、Header の `abort = true` によって表される aborted 終端状態は変わらない。
 
-ただし、`abort = true` を許可しない context で使用した場合は、該当する failure 分類に従う。
+ただし、`abort = true` を許可しない文脈で使用した場合は、該当する failure 分類に従う。
 
 例:
 
@@ -406,7 +406,7 @@ framing failure、payload format failure、header validation failure、または
 
 ### 18.1 agreement
 
-`agreement` の Body Contract failure では、Header validation および flow validation が成功し、agreement reply を返せる状態であれば、receiver はその agreement post を HEM Timeline 上の post として state commit し、`agreement` reply body を使って failure を返してよい。
+`agreement` の Body Contract failure では、Header validation および flow validation が成功し、agreement reply を返せる状態であれば、Receiver はその agreement post を HEM Timeline 上の post として state commit し、`agreement` reply body を使って failure を返してよい。
 
 この reply は、汎用 error reply ではない。
 
@@ -442,7 +442,7 @@ Agreement Body Contract failure に対して `result = false` または判定 bo
 
 `ping` / `shutdown` / `cancel` の post body が Body Contract に合わない場合、その failure は各 protocol channel の Body Contract failure とする。
 
-Header validation および flow validation が成功し、対応 reply を返せる状態であれば、receiver はその post を HEM Timeline 上の post として state commit し、各 protocol channel の専用 reply body で `result = false` を返してよい。
+Header validation および flow validation が成功し、対応 reply を返せる状態であれば、Receiver はその post を HEM Timeline 上の post として state commit し、各 protocol channel の専用 reply body で `result = false` を返してよい。
 
 この reply は、汎用 error reply ではない。
 

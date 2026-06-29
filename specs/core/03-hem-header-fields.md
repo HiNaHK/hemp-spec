@@ -165,7 +165,7 @@ notice:
   reply を要求しない通知 role。
 ```
 
-`role` は、HEMP 上の通信上の役割を表す。
+`role` は、HEMP における通信上の役割を表す。
 
 `role` は、application 上の処理、操作、command を表すものではない。
 
