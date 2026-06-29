@@ -489,12 +489,12 @@ limits
 Agreement failure には、少なくとも次を含む。
 
 ```text
-- body.version.protocol が Semantic Versioning 2.0.0 に準拠している だが、受信側が対応しない。
+- body.version.protocol が Semantic Versioning 2.0.0 に準拠しているが、受信側が対応しない。
 - body.version.application.host が、受信側の想定 Host application identity と一致しない。
 - body.version.application.engine が、受信側の想定 Engine application identity と一致しない。
 - body.digest.protocol.name / digest が受信側の Protocol Channel Table と一致しない。
 - body.digest.application.name / digest が受信側の Application Channel Table と一致しない。
-- body.limits 内の数値 field は形式上有効 だが、受信側が受け入れ可能ではない。
+- body.limits 内の数値 field は形式上有効だが、受信側が受け入れ可能ではない。
 ```
 
 Agreement failure 時は次の通りとする。
@@ -520,7 +520,7 @@ Agreement Body Contract failure には、少なくとも次を含む。
 - agreement body の必須 field が欠落している。
 - agreement body 内の必須 known field の semantic presence がない。
 - agreement body 内の数値 field が有効範囲外である。
-- body.version.protocol が Semantic Versioning 2.0.0 に準拠していない である。
+- body.version.protocol が Semantic Versioning 2.0.0 に準拠していない。
 - body.digest.*.name が digest.name の有効形式に合わない。
 - body.digest.*.digest が 32 bytes ではない。
 - body.limits 内の数値 field が正の整数値ではない。
@@ -626,7 +626,7 @@ semantic presence がない
 
 `body.limits` 内の数値 field が semantic presence を持たない、0である、またはこの文書が定義する値域に合わない場合、その agreement body は Agreement Body Contract failure とする。
 
-`body.limits` 内の数値 field が形式上有効 であるが、受信側がその値を受け入れない場合、それは Agreement failure とする。
+`body.limits` 内の数値 field が形式上有効であるが、受信側がその値を受け入れない場合、それは Agreement failure とする。
 
 ---
 
