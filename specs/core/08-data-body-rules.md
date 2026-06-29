@@ -366,7 +366,7 @@ chunking banned flag = false:
 
 固定 data とは、送信開始時点で全体 byte 列が存在する有限 data である。
 
-固定 data では、送信側は送信開始前に、生成する HEM が Standard Data Body rules、Agreement 済み limits、seq 上限、対象 channel の性質、Core Header の有効な組み合わせ、および適用される Transport Binding / Profile の peer-visible な送信条件を満たすことを確認できなければならない。
+固定 data では、送信側は送信開始前に、生成する HEM が Standard Data Body rules、Agreement 済み limits、seq 上限、対象 channel の性質、Core Header の有効な組み合わせ、および適用される Transport Binding / Profile が定義する相互運用上の送信条件を満たすことを確認できなければならない。
 
 この文書は、送信側実装の内部で事前計画表、buffer、queue、または特定の分割アルゴリズムを持つことを要求しない。
 
@@ -382,10 +382,10 @@ chunking banned flag = false:
 - seq 上限を超えない
 - 対象 channel の chunking 可否に違反しない
 - Core Header の有効な組み合わせに違反しない
-- 適用される Transport Binding / Profile の peer-visible な送信条件に違反しない
+- 適用される Transport Binding / Profile が定義する相互運用上の送信条件に違反しない
 ```
 
-適用される Transport Binding / Profile の peer-visible な送信条件には、Message Boundary Profile の `transport message payload max` などを含む。
+適用される Transport Binding / Profile が定義する相互運用上の送信条件には、Message Boundary Profile の `transport message payload max` などを含む。
 
 `body.limits.hem_payload_length` は、application channel 上の通常 HEM 通信で許可する単体 encoded HEM Payload length 上限である。
 
@@ -395,7 +395,7 @@ Standard Data Body の data bytes fragment には、別途 `standard_data_body_d
 
 ### 13.3 chunking が許可されている場合
 
-`chunking banned flag = false` の channel で固定 data を送信する場合、送信側は、Agreement 済み limits、seq 上限、対象 channel の性質、Core Header の有効な組み合わせ、および適用される Transport Binding / Profile の peer-visible な送信条件を満たす範囲で、data を複数の通常 Data Body HEM に分割してよい。
+`chunking banned flag = false` の channel で固定 data を送信する場合、送信側は、Agreement 済み limits、seq 上限、対象 channel の性質、Core Header の有効な組み合わせ、および適用される Transport Binding / Profile が定義する相互運用上の送信条件を満たす範囲で、data を複数の通常 Data Body HEM に分割してよい。
 
 HEMP Core は、終端 HEM を除く各 HEM について、その HEM に合法に載せられる最大量の data bytes を載せることを要求しない。
 
@@ -420,11 +420,11 @@ abort = false
 
 `chunking banned flag = true` の channel で固定 data を送信する場合、その data は1 HEMで完結しなければならない。
 
-1 HEM として表現した場合の encoded HEM Payload length、`len(通常 body bytes)`、または適用される Transport Binding / Profile の peer-visible な送信条件を満たさない場合、その data はその channel では送信できない。
+1 HEM として表現した場合の encoded HEM Payload length、`len(通常 body bytes)`、または適用される Transport Binding / Profile が定義する相互運用上の送信条件を満たさない場合、その data はその channel では送信できない。
 
 ### 13.5 送信不可時の扱い
 
-固定 data について、送信開始前に Agreement 済み limits、channel 性質、Core Header の有効な組み合わせ、または適用される Transport Binding / Profile の peer-visible な送信条件を満たせないと分かった場合、送信側は HEM を送信してはならない。
+固定 data について、送信開始前に Agreement 済み limits、channel 性質、Core Header の有効な組み合わせ、または適用される Transport Binding / Profile が定義する相互運用上の送信条件を満たせないと分かった場合、送信側は HEM を送信してはならない。
 
 この場合、まだ論理送信は開始されていないため、`abort = true` HEM を送信する必要はない。
 
@@ -446,7 +446,7 @@ abort = false
 
 この文書は、その内部状態を buffer、queue、stream object、timer object、または特定の API として定義しない。
 
-送信側が未送信 data bytes をどのように保持する場合でも、wire 上で送信される HEM は、この文書の Standard Data Body rules、Agreement 済み limits、seq 上限、対象 channel の性質、Core Header の有効な組み合わせ、および適用される Transport Binding / Profile の peer-visible な送信条件を満たさなければならない。
+送信側が未送信 data bytes をどのように保持する場合でも、wire 上で送信される HEM は、この文書の Standard Data Body rules、Agreement 済み limits、seq 上限、対象 channel の性質、Core Header の有効な組み合わせ、および適用される Transport Binding / Profile が定義する相互運用上の送信条件を満たさなければならない。
 
 ### 14.3 通常途中 HEM の生成契機
 
@@ -464,7 +464,7 @@ abort = false
 len(通常 body bytes) >= 1
 ```
 
-また、その HEM は Agreement 済み limits、seq 上限、対象 channel の性質、Core Header の有効な組み合わせ、および適用される Transport Binding / Profile の peer-visible な送信条件を満たさなければならない。
+また、その HEM は Agreement 済み limits、seq 上限、対象 channel の性質、Core Header の有効な組み合わせ、および適用される Transport Binding / Profile が定義する相互運用上の送信条件を満たさなければならない。
 
 次に生成しようとする HEM を通常 Data Body HEM として送信すると、同じ論理送信を合法に継続または正常完了できない場合、送信側はこの文書の abort 規則に従わなければならない。
 
@@ -489,7 +489,7 @@ abort = false
 
 この終端 HEM は、empty data を運んでよい。
 
-この終端 HEM も、Agreement 済み limits、seq 上限、対象 channel の性質、Core Header の有効な組み合わせ、および適用される Transport Binding / Profile の peer-visible な送信条件を満たさなければならない。
+この終端 HEM も、Agreement 済み limits、seq 上限、対象 channel の性質、Core Header の有効な組み合わせ、および適用される Transport Binding / Profile が定義する相互運用上の送信条件を満たさなければならない。
 
 ### 14.6 正常継続不能 / 正常完了不能時の abort
 
@@ -503,7 +503,7 @@ abort = false
 2. 正常終端が決定されているが、
    未送信 data bytes を end = true, abort = false の正常終端として、
    Agreement 済み limits、seq 上限、対象 channel の性質、
-   Core Header の有効な組み合わせ、または適用される Transport Binding / Profile の peer-visible な送信条件を満たす形で送信できない場合。
+   Core Header の有効な組み合わせ、または適用される Transport Binding / Profile が定義する相互運用上の送信条件を満たす形で送信できない場合。
 ```
 
 この場合、送信側は次の HEM を送信し、その論理送信を aborted 状態で終端しなければならない。
@@ -515,7 +515,7 @@ abort = true
 
 `abort = true` の HEM は、Standard Data Body の正常な data bytes fragment を運ばない。
 
-`abort = true` の HEM も通常の HEM と同様に、Agreement 済み limits、seq 上限、対象 channel の性質、Core Header の有効な組み合わせ、および適用される Transport Binding / Profile の peer-visible な送信条件を満たさなければならない。
+`abort = true` の HEM も通常の HEM と同様に、Agreement 済み limits、seq 上限、対象 channel の性質、Core Header の有効な組み合わせ、および適用される Transport Binding / Profile が定義する相互運用上の送信条件を満たさなければならない。
 
 この条件には、少なくとも次を含む。
 
@@ -523,7 +523,7 @@ abort = true
 - 次の通常途中 HEM が role.*.hem_count 上の最後の合法 HEM になる場合。
 - 次の通常途中 HEM を送ると role.*.payload_total_length の残りが、後続の終端 HEMを構成できない値になる場合。
 - 次の通常途中 HEM を送ると seq 上限に到達し、後続の終端 HEM を構成できない場合。
-- 正常終端が決定された時点で、残りの未送信 data bytes を正常終端として送信すると、Agreement 済み limits、seq 上限、対象 channel の性質、Core Header の有効な組み合わせ、または適用される Transport Binding / Profile の peer-visible な送信条件に違反する場合。
+- 正常終端が決定された時点で、残りの未送信 data bytes を正常終端として送信すると、Agreement 済み limits、seq 上限、対象 channel の性質、Core Header の有効な組み合わせ、または適用される Transport Binding / Profile が定義する相互運用上の送信条件に違反する場合。
 - 対象 channel の chunking 可否により、end = false の通常途中 HEM を送れない場合。
 ```
 
@@ -654,7 +654,7 @@ Protobuf Encoding specification では、application channel の通常 body は 
 - Agreement 済み limits 超過。
 - encoded HEM Payload length > body.limits.hem_payload_length。
 - channel / thread / role / direction の flow rule 違反。
-- 適用される Transport Binding / Profile の peer-visible な送信条件違反または受信条件違反。
+- 適用される Transport Binding / Profile が定義する相互運用上の送信条件違反または受信条件違反。
 - aborted 終端後に同じ論理送信の継続 HEM を受信したこと。
 - abort = true HEM の abort body が通常 Standard Data Body body として解釈できないこと。
 ```
@@ -667,7 +667,7 @@ Protobuf Encoding specification では、application channel の通常 body は 
 
 ### 18.1 固定 data の送信前 failure
 
-固定 data で、送信開始前に Agreement 済み limits、channel 性質、Core Header の有効な組み合わせ、または適用される Transport Binding / Profile の peer-visible な送信条件を満たせないことが分かった場合、送信側は HEM を送信してはならない。
+固定 data で、送信開始前に Agreement 済み limits、channel 性質、Core Header の有効な組み合わせ、または適用される Transport Binding / Profile が定義する相互運用上の送信条件を満たせないことが分かった場合、送信側は HEM を送信してはならない。
 
 この場合、まだ論理送信は開始されていないため、`abort = true` HEM を送信する必要はない。
 
@@ -677,7 +677,7 @@ Protobuf Encoding specification では、application channel の通常 body は 
 
 逐次生成 data で、正常継続または正常完了できないことが確定した場合、送信側は、送信可能であれば `end = true, abort = true` の HEM によって論理送信を aborted 終端しなければならない。
 
-`abort = true` の HEM も、Agreement 済み limits、seq 上限、対象 channel の性質、Core Header の有効な組み合わせ、および適用される Transport Binding / Profile の peer-visible な送信条件を満たさなければならない。
+`abort = true` の HEM も、Agreement 済み limits、seq 上限、対象 channel の性質、Core Header の有効な組み合わせ、および適用される Transport Binding / Profile が定義する相互運用上の送信条件を満たさなければならない。
 
 送信元 application への返却値、例外、通知、error object、または API 上の扱いは、HEMP Core では定義しない。
 
@@ -699,7 +699,7 @@ Standard Data Body は、Transport Binding を再定義しない。
 
 Transport Binding は、Standard Data Body HEM を通常の HEM frame として運ぶ。
 
-Standard Data Body の HEM も、Transport Binding が定義する HEM frame boundary、complete HEM frame、direction、順序保証単位、transport failure 規則、および peer-visible な Transport Binding / Profile level の送受信条件に従う。
+Standard Data Body の HEM も、Transport Binding が定義する HEM frame boundary、complete HEM frame、direction、順序保証単位、transport failure 規則、および Transport Binding / Profile が定義する相互運用上の送受信条件に従う。
 
 Transport Binding は、Standard Data Body の data bytes、empty data、time flush、abort 終端を、transport 上の信号として再定義してはならない。
 
