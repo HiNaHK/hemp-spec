@@ -452,7 +452,7 @@ HEMP 実装は、`agreement` の個別結果に `code` または `reason` を送
 
 ## 19. Agreement 成立条件
 
-Host-Engine Agreement は、agreement reply body が Agreement reply Body Contract として valid であり、かつ次をすべて満たす場合だけ成立する。
+Host-Engine Agreement は、agreement reply body が Agreement reply Body Contract に適合しており、かつ次をすべて満たす場合だけ成立する。
 
 ```text
 body.version.protocol.result == true
@@ -463,15 +463,15 @@ body.digest.application.result == true
 body.limits 内の判定 boolean leaf がすべて true
 ```
 
-agreement reply body が Agreement reply Body Contract として valid ではない場合、その HEM は Agreement failure ではなく、Agreement Body Contract failure または該当する HEMP failure classification に従う。
+agreement reply body が Agreement reply Body Contract に適合していない場合、その HEM は Agreement failure ではなく、Agreement Body Contract failure または該当する HEMP failure classification に従う。
 
-agreement reply body が valid であり、かつ1つでも成立条件を満たさない場合は Agreement failure とする。
+agreement reply body が Agreement reply Body Contract に適合しており、かつ1つでも成立条件を満たさない場合は Agreement failure とする。
 
 ---
 
 ## 20. Agreement failure
 
-Agreement body または agreement reply body が Body Contract として valid であり、かつ Agreement 成立条件を1つでも満たさない場合は Agreement failure とする。
+Agreement body または agreement reply body が Body Contract に適合しており、かつ Agreement 成立条件を1つでも満たさない場合は Agreement failure とする。
 
 Agreement failure は HEMP failure 5分類には含めない。
 
@@ -489,12 +489,12 @@ limits
 Agreement failure には、少なくとも次を含む。
 
 ```text
-- body.version.protocol が Semantic Versioning 2.0.0 として valid だが、受信側が対応しない。
+- body.version.protocol が Semantic Versioning 2.0.0 に準拠しているが、受信側が対応しない。
 - body.version.application.host が、受信側の想定 Host application identity と一致しない。
 - body.version.application.engine が、受信側の想定 Engine application identity と一致しない。
 - body.digest.protocol.name / digest が受信側の Protocol Channel Table と一致しない。
 - body.digest.application.name / digest が受信側の Application Channel Table と一致しない。
-- body.limits 内の数値 field は形式上 valid だが、受信側が受け入れ可能ではない。
+- body.limits 内の数値 field は形式上有効だが、受信側が受け入れ可能ではない。
 ```
 
 Agreement failure 時は次の通りとする。
@@ -512,7 +512,7 @@ Agreement failure 後の処理、再接続、process の扱い、利用者向け
 
 ## 21. Agreement Body Contract failure
 
-agreement body が Body Contract として valid な Agreement proposal になっていない場合は、Agreement Body Contract failure として扱う。
+agreement body が Body Contract に適合する Agreement proposal になっていない場合は、Agreement Body Contract failure として扱う。
 
 Agreement Body Contract failure には、少なくとも次を含む。
 
@@ -520,7 +520,7 @@ Agreement Body Contract failure には、少なくとも次を含む。
 - agreement body の必須 field が欠落している。
 - agreement body 内の必須 known field の semantic presence がない。
 - agreement body 内の数値 field が有効範囲外である。
-- body.version.protocol が Semantic Versioning 2.0.0 として invalid である。
+- body.version.protocol が Semantic Versioning 2.0.0 に準拠していない。
 - body.digest.*.name が digest.name の有効形式に合わない。
 - body.digest.*.digest が 32 bytes ではない。
 - body.limits 内の数値 field が正の整数値ではない。
@@ -529,7 +529,7 @@ Agreement Body Contract failure には、少なくとも次を含む。
 
 agreement Header validation および flow validation が成功し、agreement reply を返せる状態である場合、Engine は agreement reply body を使って Agreement Body Contract failure を返してよい。
 
-この場合、Engine は Body Contract として valid ではない Agreement 項目に対応する Agreement 結果を failure として返してよい。
+この場合、Engine は Body Contract に適合していない Agreement 項目に対応する Agreement 結果を failure として返してよい。
 
 対応先は次の通りである。
 
@@ -626,7 +626,7 @@ semantic presence がない
 
 `body.limits` 内の数値 field が semantic presence を持たない、0である、またはこの文書が定義する値域に合わない場合、その agreement body は Agreement Body Contract failure とする。
 
-`body.limits` 内の数値 field が形式上 valid であるが、受信側がその値を受け入れない場合、それは Agreement failure とする。
+`body.limits` 内の数値 field が形式上有効であるが、受信側がその値を受け入れない場合、それは Agreement failure とする。
 
 ---
 
