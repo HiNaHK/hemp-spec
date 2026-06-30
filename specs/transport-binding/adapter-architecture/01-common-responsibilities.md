@@ -3,11 +3,11 @@
 Status: Review Draft / Candidate Transport Adapter Architecture Rules
 Specification version: Not assigned
 Scope: HEMP Transport Binding adapter architecture
-Draft revision: v0.2
+Draft revision: v0.3
 
 ## 1. Purpose
 
-この文書は、HEMP Core、HEMP-side Adapter、Transport-side Adapter、Transport Endpoint / Transport / Communication Path の責任境界を定義する候補である。
+この文書は、HEMP Core、HEMP-side Adapter、Transport-side Adapter、Transport Endpoint / Transport / Communication Path の責任境界を定義する。
 
 この文書は、特定 transport 型の実装方法を定義しない。
 
@@ -23,7 +23,7 @@ Draft revision: v0.2
 
 この文書は、HEMP Core semantics を再定義しない。
 
-この文書は、HEM frame sequence を transport 上で扱う際の HEMP-side Adapter と Transport-side Adapter の責任境界を定義する候補である。
+この文書は、HEM frame sequence を transport 上で扱う際の HEMP-side Adapter と Transport-side Adapter の責任境界を定義する。
 
 ## 3. Layer Overview
 
@@ -215,7 +215,7 @@ session restart
 
 ## 12. Relationship to transport-adapters/
 
-この文書は、全 Transport-side Adapter に共通する責任境界を定義する候補である。
+この文書は、全 Transport-side Adapter に共通する責任境界を定義する。
 
 各 transport 型の言語非依存ルールは、`../transport-adapters/` 配下で扱う。
 
