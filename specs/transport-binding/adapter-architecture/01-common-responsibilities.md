@@ -209,7 +209,7 @@ reconnect
 session restart
 ```
 
-これらは、必要に応じて、application、transport setup、外部 transport library、OS API、実装 repository、または Transport-side Adapter 周辺の統合層で扱う。
+これらは、必要に応じて、application、transport setup、外部 transport library、OS API、実装 repository、または Transport-side Adapter の外側にある統合処理で扱う。
 
 ただし、この文書は、これらを Transport-side Adapter の最小責任として要求しない。
 
