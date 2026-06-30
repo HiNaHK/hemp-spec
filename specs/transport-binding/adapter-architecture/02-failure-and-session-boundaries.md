@@ -3,11 +3,11 @@
 Status: Review Draft / Candidate Transport Adapter Architecture Rules
 Specification version: Not assigned
 Scope: HEMP Transport Binding adapter architecture
-Draft revision: v0.2
+Draft revision: v0.3
 
 ## 1. Purpose
 
-この文書は、transport failure、frame construction failure、HEMP Core の処理結果、HEMP session 継続可否を混ぜないための共通ルールを定義する候補である。
+この文書は、transport failure、frame construction failure、HEMP Core の処理結果、HEMP session 継続可否を混ぜないための共通ルールを定義する。
 
 この文書は、特定 transport 型の failure detail を定義しない。
 
@@ -169,7 +169,7 @@ HEMP session は未開始 / 継続可 / 継続不可。
 
 ## 12. Relationship to transport-adapters/
 
-この文書は、全 Transport-side Adapter に共通する failure / session 境界を定義する候補である。
+この文書は、全 Transport-side Adapter に共通する failure / session 境界を定義する。
 
 各 transport 型に固有の failure detail は、`../transport-adapters/<transport-type>/` 配下で必要に応じて扱う。
 
