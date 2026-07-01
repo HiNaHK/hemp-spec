@@ -165,6 +165,14 @@ HEMP Core の処理結果。
 HEMP session は未開始 / 継続可 / 継続不可。
 ```
 
+ここでいう「接続準備に失敗した」は、Transport-side Adapter へ渡せる接続済みまたは確立済みの Transport I/O を得る前に発生する異常を含む。
+
+これらの異常を、HEMP failure classification、HEMP failure response、または HEMP Core の処理結果として扱ってはならない。
+
+ここでいう「通信中に transport が継続不能になった」は、接続済みまたは確立済みの Transport I/O を使っている途中で、Transport Binding instance または HEM delivery path が継続不能になった状態を含む。
+
+この区別は、Transport Binding 仕様本文における transport failure の定義や、concrete Transport Binding が何を transport failure として扱うかの定義を置き換えない。
+
 この文書は、これらを具体的な exception class、result object、enum、field、callback、event、または API signature として定義しない。
 
 ## 12. Relationship to transport-adapters/
