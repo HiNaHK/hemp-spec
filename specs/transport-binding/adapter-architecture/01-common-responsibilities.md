@@ -134,6 +134,10 @@ transport setup
 OS API / external transport library の利用
 ```
 
+これらの処理は、Transport-side Adapter へ渡せる接続済みまたは確立済みの Transport I/O を得る前の処理として扱われ得る。
+
+Transport-side Adapter は、これらの処理そのものではなく、これらの処理によって得られた接続済みまたは確立済みの Transport I/O を包む。
+
 これらは、HEMP Core / HEMP-side Adapter の責任ではない。
 
 これらは、Transport-side Adapter の最小責任にも含めない。
