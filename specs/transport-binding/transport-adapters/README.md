@@ -17,13 +17,13 @@ transport 型は、Transport Binding Profile ではない。
 ## 文書
 
 - `local-endpoint/`: local endpoint 型 Transport-side Adapter を実装する場合の言語非依存ルール。
+- `subprocess-stdio/`: subprocess stdio型 Transport-side Adapter を実装する場合の言語非依存ルール。
 
 ## 現時点で作らない文書
 
 現時点では、次の transport 型の文書は作らない。
 
 ```text
-subprocess-stdio/
 tcp/
 quic/
 ```
