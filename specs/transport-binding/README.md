@@ -21,11 +21,3 @@ v1.0.0 の Transport Binding specification は、一覧の順に読む。
 これらの文書は、HEMP Core semantics、HEM Payload encoding、HEM Length Header、またはこのディレクトリの `01`〜`04` が定義する Transport Binding 共通仕様を置き換えない。
 
 これらの文書は、Python、Rust、TypeScript などの具体 API、class 名、module 構成、OS API、transport library API、または実装コードを定義しない。
-
-## 未確定 / future binding 文書
-
-- `local-ipc/`: Local Process IPC Binding に関する未確定または将来整理対象の文書。
-
-`local-ipc/` 配下の文書は、現時点では v1.0.0 の確定済み Transport Binding specification 本文としては扱わない。
-
-`local-ipc/` 配下の内容は、今後、`adapter-architecture/` と `transport-adapters/` の責任境界に照らして再評価する。
